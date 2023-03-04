@@ -6,6 +6,7 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
+    <!--  JSGARVEY Add Button for turning wifi on/off -->
     <Button
         android:id="@+id/onOff"
         android:layout_width="wrap_content"
@@ -15,7 +16,7 @@
         android:layout_marginStart="28dp"
         android:layout_marginTop="55dp"
         android:text="Wifi On" />
-
+    <!--  JSGARVEY Add Button for Discovering Wifi Peers -->
     <Button
         android:id="@+id/discover"
         android:layout_width="wrap_content"
@@ -25,6 +26,7 @@
         android:layout_centerHorizontal="true"
         android:text="discover" />
 
+    <!--  JSGARVEY Add ListView for wifi peers -->
     <ListView
         android:id="@+id/peerListView"
         android:layout_width="match_parent"
@@ -34,6 +36,7 @@
         android:layout_marginTop="25dp"
         android:background="@android:color/holo_orange_light" />
 
+    <!--  JSGARVEY Add  text field to display messages from peers -->
     <TextView
         android:id="@+id/readMsg"
         android:layout_width="wrap_content"
@@ -47,6 +50,7 @@
         android:textSize="20sp"
         android:textStyle="italic" />
 
+    <!--  JSGARVEY Add Text Field to write message to peers-->
     <EditText
         android:id="@+id/writeMsg"
         android:layout_width="wrap_content"
@@ -57,6 +61,7 @@
         android:inputType="textPersonName"
         android:layout_toStartOf="@+id/sendButton" />
 
+    <!--  JSGARVEY Add Send message button -->
     <Button
         android:id="@+id/sendButton"
         android:layout_width="wrap_content"
@@ -65,6 +70,7 @@
         android:layout_alignParentEnd="true"
         android:text="Send" />
 
+    <!--  JSGARVEY Connection status and discovery text view -->
     <TextView
         android:id="@+id/connectionStatus"
         android:layout_width="match_parent"
