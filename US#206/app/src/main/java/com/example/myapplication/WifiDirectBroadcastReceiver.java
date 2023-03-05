@@ -6,18 +6,19 @@ import android.content.Intent;
 import android.net.wifi.WifiManager;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.widget.Toast;
-
+//JSGARVEY 03/03/23 - US#206 Citations Sarthi Technology
+// https://www.youtube.com/playlist?list=PLFh8wpMiEi88SIJ-PnJjDxktry4lgBtN3
 public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
 
     private WifiP2pManager mManager;
     private WifiP2pManager.Channel mChannel;
-    private MainActivity mainActivity;
+    private MainActivity mActivity;
 
-    public WifiDirectBroadcastReceiver(WifiP2pManager mManager, WifiP2pManager.Channel mChannel, MainActivity mainActivity){
+    public WifiDirectBroadcastReceiver(WifiP2pManager mManager, WifiP2pManager.Channel mChannel, MainActivity mActivity){
 
         this.mManager = mManager;
         this.mChannel = mChannel;
-        this.mainActivity = mainActivity;
+        this.mActivity = mActivity;
     }
 
     /**
@@ -37,7 +38,7 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
             }
         }else if(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION.equals(action)){
             if(mManager!=null){
-                mManager.requestPeers(mChannel, mainActivity.peerListListener);
+                mManager.requestPeers(mChannel, mActivity.peerListListener);
             }
         }else if(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION.equals(action)){
             // TBD

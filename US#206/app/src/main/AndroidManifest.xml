@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--JSGARVEY 03/03/23 - US#206 Citations Sarthi Technology
+https://www.youtube.com/playlist?list=PLFh8wpMiEi88SIJ-PnJjDxktry4lgBtN3  -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-<!-- JSGARVEY Adding network permissions -->
-
+    <!-- JSGARVEY Adding wifi network permissions -->
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>;
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>;
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE"/>;

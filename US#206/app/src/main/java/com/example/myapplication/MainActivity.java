@@ -21,7 +21,8 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.List;
 
-
+//JSGARVEY 03/03/23 - US#206 Citations Sarthi Technology
+// https://www.youtube.com/playlist?list=PLFh8wpMiEi88SIJ-PnJjDxktry4lgBtN3
 public class MainActivity extends AppCompatActivity {
 
     //JSGARVEY  Add Button Objects
@@ -38,7 +39,7 @@ public class MainActivity extends AppCompatActivity {
     WifiP2pManager mManager;
     WifiP2pManager.Channel mChannel;
 
-    //JSGARVEY Broadcast Receiver T#204
+    //JSGARVEY Broadcast Receiver and intent filter T#204
     BroadcastReceiver mReceiver;
     IntentFilter mIntentFilter;
 
@@ -53,22 +54,30 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         //JSGARVEY
         initialWork();
-        exqListener();
+        exListener();
 
     }
 
-    private void exqListener(){
-
-        //JSGARVEY Android no longer allows app automation to turn wifi on or off
+    //JSGARVEY implemented method for app object actoin listeners
+    private void exListener(){
+        /*
+        JSGARVEY Wifi Enabled: button to turn wifi on and off when clicked if wifi is enabled
+        turn wifi off and switch button label. If wifi is disabled already, turn wifi on.
+        */
         btnOnOff.setOnClickListener(new View.OnClickListener() {
+             /*
+             !!!!!!Android no longer allows app automation to turn wifi on or off for Android 10+ SDK29+
+             sdk and android must be Android Pie 9 SDK 28 or less!!!!!!
+             - setWifiEnabled() is Depricated
+             */
             @Override
             public void onClick(View view) {
                 if(wifiManager.isWifiEnabled()){
                     wifiManager.setWifiEnabled(false);
-                    btnOnOff.setText("WIFI OFF");
+                    btnOnOff.setText("WIFI Enabled: " + wifiManager.isWifiEnabled());
                 }else{
                     wifiManager.setWifiEnabled(true);
-                    btnOnOff.setText("WIFI ON");
+                    btnOnOff.setText("WIFI Enabled: "+ wifiManager.isWifiEnabled());
                 }
             }
         });
@@ -95,7 +104,7 @@ public class MainActivity extends AppCompatActivity {
 
     //JSGARVEY initial work for creating objects from onCreate()
     private void initialWork() {
-        //JSGARVEY create button objects
+        //JSGARVEY create objects
         btnOnOff=(Button) findViewById(R.id.onOff);
         btnDiscover=(Button) findViewById(R.id.discover);
         btnSend=(Button) findViewById(R.id.sendButton);
@@ -104,34 +113,37 @@ public class MainActivity extends AppCompatActivity {
         connectionStatus=(TextView) findViewById(R.id.connectionStatus);
         writeMSg=(EditText) findViewById(R.id.writeMsg);
 
-        //JSGARVEY
+        //JSGARVEY create wifi manager from the android app context system wifi services
         wifiManager= (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 
-        //JSGARVEY
+        //JSGARVEY create wifi p2p manager from the android app context p2p services
         mManager = (WifiP2pManager) getApplicationContext().getSystemService(Context.WIFI_P2P_SERVICE);
         mChannel = mManager.initialize(this, getMainLooper(),null);
 
+        //JSGARVEY create wifi broadcast receiver to receive events from the wifi manager
         mReceiver = new WifiDirectBroadcastReceiver(mManager, mChannel, this);
+
 
         mIntentFilter = new IntentFilter();
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
+
     }
 
     WifiP2pManager.PeerListListener peerListListener = new WifiP2pManager.PeerListListener() {
         @Override
-        public void onPeersAvailable(WifiP2pDeviceList wifiP2pDeviceList) {
-            if(!wifiP2pDeviceList.getDeviceList().equals(peers)){
+        public void onPeersAvailable(WifiP2pDeviceList peerList) {
+            if(!peerList.getDeviceList().equals(peers)){
                 peers.clear();
-                peers.addAll(wifiP2pDeviceList.getDeviceList());
+                peers.addAll(peerList.getDeviceList());
 
-                deviceNameArray = new String[wifiP2pDeviceList.getDeviceList().size()];
-                deviceArray = new WifiP2pDevice[wifiP2pDeviceList.getDeviceList().size()];
+                deviceNameArray = new String[peerList.getDeviceList().size()];
+                deviceArray = new WifiP2pDevice[peerList.getDeviceList().size()];
                 int index = 0;
 
-                for(WifiP2pDevice device : wifiP2pDeviceList.getDeviceList()){
+                for(WifiP2pDevice device : peerList.getDeviceList()){
                     deviceNameArray[index] = device.deviceName;
                     deviceArray[index] = device;
                     index++;
