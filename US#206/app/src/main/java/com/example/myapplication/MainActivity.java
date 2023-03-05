@@ -43,8 +43,11 @@ public class MainActivity extends AppCompatActivity {
     BroadcastReceiver mReceiver;
     IntentFilter mIntentFilter;
 
+    // wifi p2p peers list
     List<WifiP2pDevice> peers = new ArrayList<WifiP2pDevice>();
+    // array holding names of devices
     String[] deviceNameArray;
+    // the p2p peer array will be used to connect to a device
     WifiP2pDevice[] deviceArray;
 
     //imported override method onCreate
@@ -82,16 +85,16 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
+        // Discover button to discover peers on the same network
         btnDiscover.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                // listener discovering peers from broadcast channel
                 mManager.discoverPeers(mChannel, new WifiP2pManager.ActionListener() {
                     @Override
                     public void onSuccess() {
                         connectionStatus.setText("Discovery Started");
                     }
-
                     @Override
                     public void onFailure(int i) {
                         connectionStatus.setText("Discovery Failed");
@@ -104,7 +107,7 @@ public class MainActivity extends AppCompatActivity {
 
     // initial work for creating objects from onCreate()
     private void initialWork() {
-        // create objects
+        // create layout objects
         btnOnOff=(Button) findViewById(R.id.onOff);
         btnDiscover=(Button) findViewById(R.id.discover);
         btnSend=(Button) findViewById(R.id.sendButton);
@@ -135,27 +138,33 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    // Wifi P2P Manager peer list listener for collecting list of wifi peers
     WifiP2pManager.PeerListListener peerListListener = new WifiP2pManager.PeerListListener() {
+        // override method to find peers available
         @Override
         public void onPeersAvailable(WifiP2pDeviceList peerList) {
+            // if the peer previous peer list does not equal current peer list gotten by listener
+            // the peers list has changed and we want to store the new list instead
             if(!peerList.getDeviceList().equals(peers)){
                 peers.clear();
                 peers.addAll(peerList.getDeviceList());
 
+                //store peers list device names to be display and add to device array to be selected
                 deviceNameArray = new String[peerList.getDeviceList().size()];
                 deviceArray = new WifiP2pDevice[peerList.getDeviceList().size()];
                 int index = 0;
-
                 for(WifiP2pDevice device : peerList.getDeviceList()){
                     deviceNameArray[index] = device.deviceName;
                     deviceArray[index] = device;
                     index++;
                 }
 
-                ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(), android.R.layout.simple_list_item_1,deviceNameArray);
+                // add all the device names to an adapter then add the adapter to the layout listview
+                ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(),android.R.layout.simple_list_item_1,deviceNameArray);
                 listView.setAdapter(adapter);
             }
 
+            // if no peers found pop-up "No Device Found"
             if(peers.size() == 0){
                 Toast.makeText(getApplicationContext(), "No Device Found", Toast.LENGTH_SHORT).show();
 
