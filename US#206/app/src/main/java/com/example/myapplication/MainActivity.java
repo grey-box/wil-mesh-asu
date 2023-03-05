@@ -25,21 +25,21 @@ import java.util.List;
 // https://www.youtube.com/playlist?list=PLFh8wpMiEi88SIJ-PnJjDxktry4lgBtN3
 public class MainActivity extends AppCompatActivity {
 
-    //JSGARVEY  Add Button Objects
+    // Add Button Objects
     Button btnOnOff, btnDiscover, btnSend;
-    //JSGARVEY  Add list view for available peer list
+    // Add list view for available peer list
     ListView listView;
-    //JSGARVEY  message text view for read message and connection status
+    // message text view for read message and connection status
     TextView read_msg_box, connectionStatus;
-    //JSGARVEY message text field to enter message to send to peers
+    //message text field to enter message to send to peers
     EditText writeMSg;
 
-    //JSGARVEY  Wifi Managers and Channel
+    //Wifi Managers and Channel
     WifiManager wifiManager;
     WifiP2pManager mManager;
     WifiP2pManager.Channel mChannel;
 
-    //JSGARVEY Broadcast Receiver and intent filter T#204
+    //Broadcast Receiver and intent filter T#204
     BroadcastReceiver mReceiver;
     IntentFilter mIntentFilter;
 
@@ -47,21 +47,21 @@ public class MainActivity extends AppCompatActivity {
     String[] deviceNameArray;
     WifiP2pDevice[] deviceArray;
 
-    //JSGARVEY imported override method onCreate
+    //imported override method onCreate
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        //JSGARVEY
+        //JSGARVEY new methods
         initialWork();
         exListener();
 
     }
 
-    //JSGARVEY implemented method for app object actoin listeners
+    // implemented method for app object action listeners
     private void exListener(){
         /*
-        JSGARVEY Wifi Enabled: button to turn wifi on and off when clicked if wifi is enabled
+        Wifi Enabled: button to turn wifi on and off when clicked if wifi is enabled
         turn wifi off and switch button label. If wifi is disabled already, turn wifi on.
         */
         btnOnOff.setOnClickListener(new View.OnClickListener() {
@@ -82,7 +82,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        //JSGARVEY
+
         btnDiscover.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -102,9 +102,9 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    //JSGARVEY initial work for creating objects from onCreate()
+    // initial work for creating objects from onCreate()
     private void initialWork() {
-        //JSGARVEY create objects
+        // create objects
         btnOnOff=(Button) findViewById(R.id.onOff);
         btnDiscover=(Button) findViewById(R.id.discover);
         btnSend=(Button) findViewById(R.id.sendButton);
@@ -113,21 +113,24 @@ public class MainActivity extends AppCompatActivity {
         connectionStatus=(TextView) findViewById(R.id.connectionStatus);
         writeMSg=(EditText) findViewById(R.id.writeMsg);
 
-        //JSGARVEY create wifi manager from the android app context system wifi services
+        // create wifi manager from the android app context system wifi services
         wifiManager= (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 
-        //JSGARVEY create wifi p2p manager from the android app context p2p services
+        // create wifi p2p manager providing the API for manaagin Wifi peer-to-peer connectivity
         mManager = (WifiP2pManager) getApplicationContext().getSystemService(Context.WIFI_P2P_SERVICE);
+        // a channel that connects the app to the wifi p2p framework.
         mChannel = mManager.initialize(this, getMainLooper(),null);
 
-        //JSGARVEY create wifi broadcast receiver to receive events from the wifi manager
+        // create wifi broadcast receiver to receive events from the wifi manager
         mReceiver = new WifiDirectBroadcastReceiver(mManager, mChannel, this);
-
-
         mIntentFilter = new IntentFilter();
+        // indicates whether WiFi P2P is enabled
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
+        // indicates that the available peer list has changed
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
+        // indicates the state of Wifi P2P connectivity has changed
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
+        //indicates this device's configuration details have changed
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
     }
@@ -161,12 +164,14 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    // Wifi broadcast receiver override methods
     @Override
     protected  void onResume(){
         super.onResume();
         registerReceiver(mReceiver,mIntentFilter);
     }
 
+    // Wifi broadcast receiver override methods
     @Override
     protected void onPause(){
         super.onPause();

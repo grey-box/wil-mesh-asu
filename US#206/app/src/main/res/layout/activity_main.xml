@@ -8,7 +8,7 @@ https://www.youtube.com/playlist?list=PLFh8wpMiEi88SIJ-PnJjDxktry4lgBtN3  -->
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <!--  JSGARVEY Add Button for turning wifi on/off -->
+    <!--  Add Button for turning wifi on/off -->
     <Button
         android:id="@+id/onOff"
         android:layout_width="wrap_content"
@@ -18,7 +18,7 @@ https://www.youtube.com/playlist?list=PLFh8wpMiEi88SIJ-PnJjDxktry4lgBtN3  -->
         android:layout_marginStart="28dp"
         android:layout_marginTop="55dp"
         android:text="Wifi Enabled: True" />
-    <!--  JSGARVEY Add Button for Discovering Wifi Peers -->
+    <!--  Add Button for Discovering Wifi Peers -->
     <Button
         android:id="@+id/discover"
         android:layout_width="wrap_content"
@@ -28,7 +28,7 @@ https://www.youtube.com/playlist?list=PLFh8wpMiEi88SIJ-PnJjDxktry4lgBtN3  -->
         android:layout_centerHorizontal="true"
         android:text="discover" />
 
-    <!--  JSGARVEY Add ListView for wifi peers -->
+    <!--  Add ListView for wifi peers -->
     <ListView
         android:id="@+id/peerListView"
         android:layout_width="match_parent"
@@ -38,7 +38,7 @@ https://www.youtube.com/playlist?list=PLFh8wpMiEi88SIJ-PnJjDxktry4lgBtN3  -->
         android:layout_marginTop="25dp"
         android:background="@android:color/holo_orange_light" />
 
-    <!--  JSGARVEY Add  text field to display messages from peers -->
+    <!--  Add  text field to display messages from peers -->
     <TextView
         android:id="@+id/readMsg"
         android:layout_width="wrap_content"
@@ -52,7 +52,7 @@ https://www.youtube.com/playlist?list=PLFh8wpMiEi88SIJ-PnJjDxktry4lgBtN3  -->
         android:textSize="20sp"
         android:textStyle="italic" />
 
-    <!--  JSGARVEY Add Text Field to write message to peers-->
+    <!--  Add Text Field to write message to peers-->
     <EditText
         android:id="@+id/writeMsg"
         android:layout_width="wrap_content"
@@ -63,7 +63,7 @@ https://www.youtube.com/playlist?list=PLFh8wpMiEi88SIJ-PnJjDxktry4lgBtN3  -->
         android:inputType="textPersonName"
         android:layout_toStartOf="@+id/sendButton" />
 
-    <!--  JSGARVEY Add Send message button -->
+    <!--  Add Send message button -->
     <Button
         android:id="@+id/sendButton"
         android:layout_width="wrap_content"
@@ -72,7 +72,7 @@ https://www.youtube.com/playlist?list=PLFh8wpMiEi88SIJ-PnJjDxktry4lgBtN3  -->
         android:layout_alignParentEnd="true"
         android:text="Send" />
 
-    <!--  JSGARVEY Connection status and discovery text view -->
+    <!--  Connection status and discovery text view -->
     <TextView
         android:id="@+id/connectionStatus"
         android:layout_width="match_parent"
