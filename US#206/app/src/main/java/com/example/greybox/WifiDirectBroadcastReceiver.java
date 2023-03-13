@@ -34,10 +34,10 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
             // if wifi p2p state is enabled
             if(state==WifiP2pManager.WIFI_P2P_STATE_ENABLED){
                 //Pop-up (toast) informing wifi is on
-                Toast.makeText(context, "Wifi is  ON",Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, "WIFI IS  ON",Toast.LENGTH_SHORT).show();
             }else{
                 //Pop-up (toast) informing wifi is off
-                Toast.makeText(context, "Wifi is  OFF",Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, "WIFI IS  OFF",Toast.LENGTH_SHORT).show();
             }
         // else if the peers list in wifi p2p manager has changed
         }else if(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION.equals(action)){

@@ -4,12 +4,17 @@ import androidx.fragment.app.FragmentActivity;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.FeatureInfo;
+import android.content.pm.PackageManager;
+import android.location.LocationManager;
 import android.net.wifi.WifiManager;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -56,6 +61,14 @@ public class MainActivity extends FragmentActivity{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         //JSGARVEY new methods
+        if(getPackageManager().hasSystemFeature("android.hardware.wifi.direct")){
+            Toast.makeText(getApplicationContext(), "WIFI DIRECT SUPPORTED!!!", Toast.LENGTH_SHORT).show();
+        }
+/*        LocationManager manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            Toast.makeText(this, "PLEASE ENABLE LOCATION SERVICES FOR SYSTEM AND PERMISSION FOR APP", Toast.LENGTH_LONG).show();
+            startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+        }*/
         initialWork();
         exListener();
 
@@ -71,7 +84,7 @@ public class MainActivity extends FragmentActivity{
             /*
             !!!!!!Android no longer allows app automation to turn wifi on or off for Android 10+ SDK29+
             sdk and android must be Android Pie 9 SDK 28 or less!!!!!!
-            - setWifiEnabled() is Depricated
+            - setWifiEnabled() is Deprecated
             */
             @Override
             public void onClick(View view) {
@@ -97,7 +110,7 @@ public class MainActivity extends FragmentActivity{
                     }
                     @Override
                     public void onFailure(int i) {
-                        connectionStatus.setText("Discovery Failed");
+                        connectionStatus.setText("Discovery Failed"+i);
                     }
                 });
             }
@@ -119,7 +132,7 @@ public class MainActivity extends FragmentActivity{
         // create wifi manager from the android app context system wifi services
         wifiManager= (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 
-        // create wifi p2p manager providing the API for manaagin Wifi peer-to-peer connectivity
+        // create wifi p2p manager providing the API for managing Wifi peer-to-peer connectivity
         mManager = (WifiP2pManager) getApplicationContext().getSystemService(Context.WIFI_P2P_SERVICE);
         // a channel that connects the app to the wifi p2p framework.
         mChannel = mManager.initialize(this, getMainLooper(),null);
@@ -140,12 +153,15 @@ public class MainActivity extends FragmentActivity{
 
     // Wifi P2P Manager peer list listener for collecting list of wifi peers
     WifiP2pManager.PeerListListener peerListListener = new WifiP2pManager.PeerListListener() {
+
         // override method to find peers available
         @Override
         public void onPeersAvailable(WifiP2pDeviceList peerList) {
+            Toast.makeText(getApplicationContext(), "Peers Available", Toast.LENGTH_SHORT).show();
             // if the peer previous peer list does not equal current peer list gotten by listener
             // the peers list has changed and we want to store the new list instead
             if(!peerList.getDeviceList().equals(peers)){
+                Toast.makeText(getApplicationContext(), "Peers Changed", Toast.LENGTH_SHORT).show();
                 peers.clear();
                 peers.addAll(peerList.getDeviceList());
 
