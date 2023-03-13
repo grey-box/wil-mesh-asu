@@ -1,6 +1,6 @@
-package com.example.myapplication;
+package com.example.greybox;
 
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentActivity;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -23,7 +23,7 @@ import java.util.List;
 
 //JSGARVEY 03/03/23 - US#206 Citations Sarthi Technology
 // https://www.youtube.com/playlist?list=PLFh8wpMiEi88SIJ-PnJjDxktry4lgBtN3
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends FragmentActivity{
 
     // Add Button Objects
     Button btnOnOff, btnDiscover, btnSend;
@@ -68,11 +68,11 @@ public class MainActivity extends AppCompatActivity {
         turn wifi off and switch button label. If wifi is disabled already, turn wifi on.
         */
         btnOnOff.setOnClickListener(new View.OnClickListener() {
-             /*
-             !!!!!!Android no longer allows app automation to turn wifi on or off for Android 10+ SDK29+
-             sdk and android must be Android Pie 9 SDK 28 or less!!!!!!
-             - setWifiEnabled() is Depricated
-             */
+            /*
+            !!!!!!Android no longer allows app automation to turn wifi on or off for Android 10+ SDK29+
+            sdk and android must be Android Pie 9 SDK 28 or less!!!!!!
+            - setWifiEnabled() is Depricated
+            */
             @Override
             public void onClick(View view) {
                 if(wifiManager.isWifiEnabled()){

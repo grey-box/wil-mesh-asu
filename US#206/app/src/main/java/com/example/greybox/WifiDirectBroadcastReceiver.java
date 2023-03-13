@@ -1,11 +1,11 @@
-package com.example.myapplication;
+package com.example.greybox;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.net.wifi.WifiManager;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.widget.Toast;
+
 //JSGARVEY 03/03/23 - US#206 Citations Sarthi Technology
 // https://www.youtube.com/playlist?list=PLFh8wpMiEi88SIJ-PnJjDxktry4lgBtN3
 public class WifiDirectBroadcastReceiver extends BroadcastReceiver {

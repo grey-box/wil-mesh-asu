@@ -12,5 +12,5 @@ dependencyResolutionManagement {
         mavenCentral()
     }
 }
-rootProject.name = "Greybox App"
+rootProject.name = "Greybox"
 include ':app'
