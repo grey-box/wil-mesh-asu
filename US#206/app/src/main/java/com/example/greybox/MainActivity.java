@@ -384,6 +384,14 @@ public class MainActivity extends FragmentActivity{
                 throw new RuntimeException(e);
             }
         }
+
+        private static void listFiles(String fileDirectory) {
+            File folder = new File(fileDirectory);//Opens a file object with the directory given
+            File[] files = folder.listFiles();//Gets an array of file names from file object
+            for (File file : files) {
+                System.out.println(file.getName());//loops through to print all file names
+            }
+        }
     }
 
 }
