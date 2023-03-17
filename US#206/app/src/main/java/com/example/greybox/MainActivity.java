@@ -41,8 +41,10 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
-//JSGARVEY 03/03/23 - US#206 Citations Sarthi Technology
-// https://www.youtube.com/playlist?list=PLFh8wpMiEi88SIJ-PnJjDxktry4lgBtN3
+/*
+    JSGARVEY 03/03/23 - US#206 Citations:
+    Sarthi Technology - https://www.youtube.com/playlist?list=PLFh8wpMiEi88SIJ-PnJjDxktry4lgBtN3
+ */
 public class MainActivity extends FragmentActivity{
 
     // Add Button Objects
@@ -54,13 +56,19 @@ public class MainActivity extends FragmentActivity{
     //message text field to enter message to send to peers
     EditText writeMsg;
 
-    //Wifi Managers and Channel
+    //Wifi Manager primary API for managing all aspects of WIFI connectivity
     WifiManager wifiManager;
+    //Wifi P2p Manager provides specif API for managing WIFI p2p connectivity
     WifiP2pManager mManager;
+    // A P2p channel that connects the app to the WIFI p2p framework
     WifiP2pManager.Channel mChannel;
 
-    //Broadcast Receiver and intent filter T#204
+    //Broadcast Receiver base class for code that receives and handles broadcast
+    // intents sent by the context
     BroadcastReceiver mReceiver;
+    // An Intent is a description of an operation to be performed.
+    // A filter matches intents and describes the Intent values it matches.
+    // Filters by characteristics of intents Actions, Data, and Categories
     IntentFilter mIntentFilter;
 
     // wifi p2p peers list
@@ -70,58 +78,42 @@ public class MainActivity extends FragmentActivity{
     // the p2p peer array will be used to connect to a device
     WifiP2pDevice[] deviceArray;
 
-    static final int MESSAGE_READ = 1;
 
-    ServerClass serverClass;
-    ClientClass clientClass;
-    SendReceive sendReceive;
-
-
-    //imported override method onCreate
+    //imported override method onCreate. Initialize the the activity.
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // call a the layout resource defining the UI
         setContentView(R.layout.activity_main);
-        //JSGARVEY new methods
+        //JSGARVEY pop on device notifying if device supports wifi p2p
         if(getPackageManager().hasSystemFeature("android.hardware.wifi.direct")){
             Toast.makeText(getApplicationContext(), "WIFI DIRECT SUPPORTED!!!", Toast.LENGTH_SHORT).show();
         }
-/*        LocationManager manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+        //Pop up notifying user to enable location services and permissions
+        /* LocationManager manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             Toast.makeText(this, "PLEASE ENABLE LOCATION SERVICES FOR SYSTEM AND PERMISSION FOR APP", Toast.LENGTH_LONG).show();
             startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
         }*/
+        // creating objects
         initialWork();
+        // adding listeners to the objects
         exListener();
 
     }
 
-    Handler handler = new Handler(new Handler.Callback() {
-        @Override
-        public boolean handleMessage(@NonNull Message msg) {
-            switch(msg.what){
-                case MESSAGE_READ:
-                    byte[] readBuff = (byte[]) msg.obj;
-                    String tempMsg = new String(readBuff,0,msg.arg1);
-                    read_msg_box.setText(tempMsg);
-                    break;
-            }
-            return true;
-        }
-    });
-
     // implemented method for app object action listeners
     private void exListener(){
         /*
+        (!!! NOT WORKING!!!)
         Wifi Enabled: button to turn wifi on and off when clicked if wifi is enabled
         turn wifi off and switch button label. If wifi is disabled already, turn wifi on.
+        Android no longer allows app automation to turn wifi on or off for Android 10+ SDK29+
+        sdk and android must be Android Pie 9 SDK 28 or less!!!!!!
+        setWifiEnabled() is Deprecated
         */
         btnOnOff.setOnClickListener(new View.OnClickListener() {
-            /*
-            !!!!!!Android no longer allows app automation to turn wifi on or off for Android 10+ SDK29+
-            sdk and android must be Android Pie 9 SDK 28 or less!!!!!!
-            - setWifiEnabled() is Deprecated
-            */
+
             @Override
             public void onClick(View view) {
                 if(wifiManager.isWifiEnabled()){
@@ -140,10 +132,12 @@ public class MainActivity extends FragmentActivity{
             public void onClick(View view) {
                 // listener discovering peers from broadcast channel
                 mManager.discoverPeers(mChannel, new WifiP2pManager.ActionListener() {
+                    // if listener created successfully display Discovery Started
                     @Override
                     public void onSuccess() {
                         connectionStatus.setText("Discovery Started");
                     }
+                    // if listener NOT created successfully display Discovery Failed
                     @Override
                     public void onFailure(int i) {
                         connectionStatus.setText("Discovery Failed"+i);
@@ -152,56 +146,34 @@ public class MainActivity extends FragmentActivity{
             }
         });
 
-        //JSGARVEY P2p conncetion
+        //Name of discovers peer turned into a button in the listView
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                // this array is where the devices are stored for connections
                 final WifiP2pDevice device = deviceArray[i];
+                // Config for setting up p2p connection
                 WifiP2pConfig config = new WifiP2pConfig();
+                // Set config device address from chosen device
                 config.deviceAddress = device.deviceAddress;
-
+                // Start a p2p connection to a device with specified config
                 mManager.connect(mChannel, config, new WifiP2pManager.ActionListener() {
+                    // Called when device successfully connected
                     @Override
                     public void onSuccess() {
+                        // Pop-up notifying device connected
                         Toast.makeText(getApplicationContext(),"CONNECTED TO "+device.deviceName, Toast.LENGTH_SHORT).show();
                     }
-
+                    // Called when device NOT successfully connected
                     @Override
                     public void onFailure(int i) {
+                        // Pop-up notifying device NOT connected
                         Toast.makeText(getApplicationContext(),"NOT CONNECTED", Toast.LENGTH_SHORT).show();
                     }
                 });
             }
         });
 
-        btnSend.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String msg = writeMsg.getText().toString();
-                //sendReceive.write(msg.getBytes());
-                SendTask t1  = new SendTask(msg);
-                t1.execute();
-            }
-        });
-
-    }
-
-    public class SendTask extends AsyncTask<Void,Void,Void>{
-        String message;
-        SendTask(String msg){
-            message=msg;
-        }
-
-        @Override
-        protected Void doInBackground(Void... args0) {
-            sendReceive.write(message.getBytes());
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void unused) {
-            super.onPostExecute(unused);
-        }
     }
 
     // initial work for creating objects from onCreate()
@@ -275,115 +247,39 @@ public class MainActivity extends FragmentActivity{
         }
     };
 
+    // interface for callback invocation when connection info is available
     WifiP2pManager.ConnectionInfoListener connectionInfoListener = new WifiP2pManager.ConnectionInfoListener() {
+        // If the connection info is available
         @Override
         public void onConnectionInfoAvailable(WifiP2pInfo wifiP2pInfo) {
+            // Get Host Ip Address
             final InetAddress groupOwnerAddress = wifiP2pInfo.groupOwnerAddress;
-
+            // If the connection group exists and the device is connection host
             if (wifiP2pInfo.groupFormed && wifiP2pInfo.isGroupOwner) {
                 connectionStatus.setText("HOST");
-                serverClass = new ServerClass();
-                serverClass.start();
+            // If only the connection group exists
             } else if (wifiP2pInfo.groupFormed) {
                 connectionStatus.setText("CLIENT");
-                clientClass = new ClientClass(groupOwnerAddress);
-                clientClass.start();
+
             }
         }
     };
 
-    // Wifi broadcast receiver override methods
+    // When activity enters the resume state after onCreate and onStart
     @Override
     protected  void onResume(){
         super.onResume();
         registerReceiver(mReceiver,mIntentFilter);
     }
 
-    // Wifi broadcast receiver override methods
+    // Systems call this method when the user leaves the activity meaning when
+    // the activity is no longer in the foreground.
     @Override
     protected void onPause(){
         super.onPause();
         unregisterReceiver(mReceiver);
     }
 
-    public class ServerClass extends Thread{
-        Socket socket;
-        ServerSocket serverSocket;
 
-        @Override
-        public void run() {
-            try {
-                serverSocket = new ServerSocket(8888);
-                socket = serverSocket.accept();
-                sendReceive = new SendReceive(socket);
-                sendReceive.start();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
-
-    private class SendReceive extends Thread{
-        private Socket socket;
-        private InputStream inputStream;
-        private OutputStream outputStream;
-
-        public SendReceive(Socket skt){
-            socket = skt;
-            try {
-                inputStream = socket.getInputStream();
-                outputStream = socket.getOutputStream();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        @Override
-        public void run() {
-            byte[] buffer = new byte[1024];
-            int bytes;
-
-            while(socket!=null){
-                try {
-                    bytes = inputStream.read(buffer);
-                    if(bytes > 0){
-                        handler.obtainMessage(MESSAGE_READ, bytes, -1, buffer).sendToTarget();
-                    }
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }
-
-        public void write(byte[] bytes){
-            try {
-                outputStream.write(bytes);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-    }
-
-    public class ClientClass extends Thread{
-        Socket socket;
-        String hostAdd;
-
-        public ClientClass(InetAddress hostAddress){
-            hostAdd = hostAddress.getHostAddress();
-            socket = new Socket();
-        }
-
-        @Override
-        public void run() {
-            try {
-                socket.connect(new InetSocketAddress(hostAdd,8888), 500);
-                sendReceive = new SendReceive(socket);
-                sendReceive.start();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
 
 }

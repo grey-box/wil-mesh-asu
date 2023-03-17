@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--JSGARVEY 03/03/23 - US#206 Citations Sarthi Technology
-https://www.youtube.com/playlist?list=PLFh8wpMiEi88SIJ-PnJjDxktry4lgBtN3  -->
+<!--
+    JSGARVEY 03/03/23 - US#206 Citations:
+    Sarthi Technology - https://www.youtube.com/playlist?list=PLFh8wpMiEi88SIJ-PnJjDxktry4lgBtN3
+-->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
