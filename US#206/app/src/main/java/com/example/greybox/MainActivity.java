@@ -53,6 +53,10 @@ public class MainActivity extends FragmentActivity{
     TextView read_msg_box, connectionStatus;
     //message text field to enter message to send to peers
     EditText writeMsg;
+    //the list of files from a specificed area
+    ListView fileList;
+    //List of strings for names of the files
+    String[] fileNames;
 
     //Wifi Managers and Channel
     WifiManager wifiManager;
@@ -214,6 +218,13 @@ public class MainActivity extends FragmentActivity{
         read_msg_box=(TextView) findViewById(R.id.readMsg);
         connectionStatus=(TextView) findViewById(R.id.connectionStatus);
         writeMsg=(EditText) findViewById(R.id.writeMsg);
+
+        listFiles(fileNames, System.getProperty("user.dir"));
+        fileList=(ListView) findViewById(R.id.fileList);
+
+        //
+        ArrayAdapter<String> fileAdapter = new ArrayAdapter<String>(getApplicationContext(),android.R.layout.simple_list_item_1,fileNames);
+        fileList.setAdapter(fileAdapter);
 
         // create wifi manager from the android app context system wifi services
         wifiManager= (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
@@ -385,11 +396,13 @@ public class MainActivity extends FragmentActivity{
             }
         }
 
-        private static void listFiles(String fileDirectory) {
+        private static void listFiles(String[] fileName, String fileDirectory) {
             File folder = new File(fileDirectory);//Opens a file object with the directory given
             File[] files = folder.listFiles();//Gets an array of file names from file object
+            fileName = new String[files.length];
             for (File file : files) {
-                System.out.println(file.getName());//loops through to print all file names
+                //System.out.println(file.getName());//loops through to print all file names
+                fileName.add(file.getName());
             }
         }
     }
