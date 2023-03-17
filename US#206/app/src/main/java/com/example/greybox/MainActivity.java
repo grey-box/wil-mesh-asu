@@ -78,6 +78,12 @@ public class MainActivity extends FragmentActivity{
     // the p2p peer array will be used to connect to a device
     WifiP2pDevice[] deviceArray;
 
+    // Hardcoded value that indicates to the handler that message has been read
+    static final int MESSAGE_READ = 1;
+
+    ServerClass serverClass;
+    ClientClass clientClass;
+    SendReceive sendReceive;
 
     //imported override method onCreate. Initialize the the activity.
     @Override
@@ -146,7 +152,7 @@ public class MainActivity extends FragmentActivity{
             }
         });
 
-        //Name of discovers peer turned into a button in the listView
+        //Name of discovered peer turned into a button in the listView
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
@@ -171,6 +177,18 @@ public class MainActivity extends FragmentActivity{
                         Toast.makeText(getApplicationContext(),"NOT CONNECTED", Toast.LENGTH_SHORT).show();
                     }
                 });
+            }
+        });
+
+        // Send button listener to send text message between peers
+        btnSend.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // get text message from EditText Field
+                String msg = writeMsg.getText().toString();
+                // Class to handle send text message task
+                SendTask task  = new SendTask(msg);
+                task.execute();
             }
         });
 
@@ -257,13 +275,41 @@ public class MainActivity extends FragmentActivity{
             // If the connection group exists and the device is connection host
             if (wifiP2pInfo.groupFormed && wifiP2pInfo.isGroupOwner) {
                 connectionStatus.setText("HOST");
+                serverClass = new ServerClass();
+                serverClass.start();
             // If only the connection group exists
             } else if (wifiP2pInfo.groupFormed) {
                 connectionStatus.setText("CLIENT");
+                clientClass = new ClientClass(groupOwnerAddress);
+                clientClass.start();
 
             }
         }
     };
+
+    // A Handler allows you to send and process Message and Runnable objects associated with a
+    // thread's MessageQueue. Each Handler instance is associated with a single thread and that
+    // thread's message queue.
+    // Handler.Callback interface you can use when instantiating a Handler to avoid having to
+    // implement your own subclass of Handler.
+    Handler handler = new Handler(new Handler.Callback() {
+        @Override
+        public boolean handleMessage(@NonNull Message msg) {
+            // msg.what identifies what message is about
+            switch(msg.what){
+                // If the message is a text message to be read case=1
+                case MESSAGE_READ:
+                    // cast the message object as an byte array to store the message
+                    byte[] readBuff = (byte[]) msg.obj;
+                    // store the byte array as a String to be printed
+                    String tempMsg = new String(readBuff,0,msg.arg1);
+                    // Add message to devices textview
+                    read_msg_box.setText(tempMsg);
+                    break;
+            }
+            return true;
+        }
+    });
 
     // When activity enters the resume state after onCreate and onStart
     @Override
@@ -280,6 +326,126 @@ public class MainActivity extends FragmentActivity{
         unregisterReceiver(mReceiver);
     }
 
+    // Class for handling the send task
+    public class SendTask extends AsyncTask<Void,Void,Void>{
+        // Send message string
+        String message;
+        // Pass constructor the string message
+        SendTask(String msg){
+            message=msg;
+        }
+        // Override this method to perform a computation on a background thread.
+        @Override
+        protected Void doInBackground(Void... args0) {
+            // Write message bytes to socket.outputstream
+            sendReceive.write(message.getBytes());
+            return null;
+        }
+        // Runs on the UI thread after doInBackground(Params...)
+        @Override
+        protected void onPostExecute(Void unused) {
+            super.onPostExecute(unused);
+        }
+    }
+
+    // Class for handling socket streams
+    private class SendReceive extends Thread{
+        // A socket is an endpoint for communication between two machines.
+        private Socket socket;
+        // This abstract class is the superclass of all classes representing an input stream of bytes.
+        private InputStream inputStream;
+        // This abstract class is the superclass of all classes representing an output stream of bytes.
+        private OutputStream outputStream;
+        // Constructor passed socket for end-to-end communication
+        public SendReceive(Socket skt){
+            // socket for end to end communication
+            socket = skt;
+            try {
+                // Save input and out as actual variables
+                inputStream = socket.getInputStream();
+                outputStream = socket.getOutputStream();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        // Method to override that runs when thread starts
+        @Override
+        public void run() {
+            // Stores the transmitted message
+            byte[] buffer = new byte[1024];
+            int bytes;
+            // While socket is still open
+            while(socket!=null){
+                try {
+                    // Read message inputstream from socket and store in variable
+                    bytes = inputStream.read(buffer);
+                    // If there is a message
+                    if(bytes > 0){
+                        // Pass the message to the handler and have the handler save and convert message
+                        // to a string then display the string in the layout
+                        handler.obtainMessage(MESSAGE_READ, bytes, -1, buffer).sendToTarget();
+                    }
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+
+        // Method used by sendtask that writes the message to the socket outputstream
+        public void write(byte[] bytes){
+            try {
+                outputStream.write(bytes);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    // Server class to be made into own class soon
+    public class ServerClass extends Thread{
+        Socket socket;
+        ServerSocket serverSocket;
+
+        @Override
+        public void run() {
+            try {
+                // Set server socket port number
+                serverSocket = new ServerSocket(8888);
+                // accept and store socket from server socket
+                socket = serverSocket.accept();
+                // Create sendRecieve task to handle socket stream operations
+                sendReceive = new SendReceive(socket);
+                sendReceive.start();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+    // Client class to be made into own class soon
+    public class ClientClass extends Thread{
+        Socket socket;
+        String hostAdd;
+        // Constructor passed the server host IpAddress
+        public ClientClass(InetAddress hostAddress){
+            hostAdd = hostAddress.getHostAddress();
+            socket = new Socket();
+        }
+
+        @Override
+        public void run() {
+            try {
+                // try to connect socket to host socket port
+                socket.connect(new InetSocketAddress(hostAdd,8888), 500);
+                // Create sendRecieve task to handle socket stream operations
+                sendReceive = new SendReceive(socket);
+                // Run the sendReceive object
+                sendReceive.start();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
 
 
 }
