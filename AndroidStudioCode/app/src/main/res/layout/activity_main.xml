@@ -11,26 +11,34 @@
     tools:context=".MainActivity">
 
     <EditText
+        android:id="@+id/et_phone"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/et_phone"
+        android:background="@android:drawable/editbox_background"
         android:hint="Enter phone number"
-        android:padding="12dp"
-        android:maxLength="10"
         android:inputType="phone"
-        android:background="@android:drawable/editbox_background"/>
+        android:maxLength="10"
+        android:padding="12dp"
+        android:textColor="@color/purple_700"
+        android:textColorHighlight="@color/purple_700"
+        android:textColorHint="@color/purple_700"
+        android:textColorLink="@color/purple_700" />
 
     <EditText
+        android:id="@+id/et_message"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/et_message"
-        android:hint="Enter message"
-        android:padding="12dp"
-        android:minLines="6"
-        android:inputType="textMultiLine"
-        android:gravity="top"
         android:layout_marginTop="8dp"
-        android:background="@android:drawable/editbox_background" />
+        android:background="@android:drawable/editbox_background"
+        android:gravity="top"
+        android:hint="Enter message"
+        android:inputType="textMultiLine"
+        android:minLines="6"
+        android:padding="12dp"
+        android:textColor="@color/purple_700"
+        android:textColorHighlight="@color/purple_700"
+        android:textColorHint="@color/purple_700"
+        android:textColorLink="@color/purple_700" />
 
     <Button
         android:layout_width="wrap_content"
