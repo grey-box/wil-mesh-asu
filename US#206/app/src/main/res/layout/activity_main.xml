@@ -38,6 +38,16 @@ https://www.youtube.com/playlist?list=PLFh8wpMiEi88SIJ-PnJjDxktry4lgBtN3  -->
         android:layout_marginTop="25dp"
         android:background="@android:color/holo_orange_light" />
 
+    <!--  Add ListView for wifi peers -->
+    <ListView
+        android:id="@+id/fileList"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:layout_alignParentStart="true"
+        android:layout_below="@+id/peerListView"
+        android:layout_marginTop="25dp"
+        android:background="@android:color/holo_orange_light" />
+
     <!--  Add  text field to display messages from peers -->
     <TextView
         android:id="@+id/readMsg"
@@ -45,7 +55,7 @@ https://www.youtube.com/playlist?list=PLFh8wpMiEi88SIJ-PnJjDxktry4lgBtN3  -->
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
         android:layout_alignParentStart="true"
-        android:layout_below="@+id/peerListView"
+        android:layout_below="@+id/fileList"
         android:layout_marginTop="31dp"
         android:text="Message"
         android:textAlignment="center"

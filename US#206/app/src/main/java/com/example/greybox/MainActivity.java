@@ -31,6 +31,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -219,12 +220,8 @@ public class MainActivity extends FragmentActivity{
         connectionStatus=(TextView) findViewById(R.id.connectionStatus);
         writeMsg=(EditText) findViewById(R.id.writeMsg);
 
-        listFiles(fileNames, System.getProperty("user.dir"));
         fileList=(ListView) findViewById(R.id.fileList);
 
-        //
-        ArrayAdapter<String> fileAdapter = new ArrayAdapter<String>(getApplicationContext(),android.R.layout.simple_list_item_1,fileNames);
-        fileList.setAdapter(fileAdapter);
 
         // create wifi manager from the android app context system wifi services
         wifiManager= (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
@@ -299,6 +296,9 @@ public class MainActivity extends FragmentActivity{
                 connectionStatus.setText("CLIENT");
                 clientClass = new ClientClass(groupOwnerAddress);
                 clientClass.start();
+                clientClass.listFiles(fileNames, System.getProperty("user.dir"));
+                ArrayAdapter<String> fileAdapter = new ArrayAdapter<String>(getApplicationContext(),android.R.layout.simple_list_item_1,fileNames);
+                fileList.setAdapter(fileAdapter);
             }
         }
     };
@@ -396,15 +396,18 @@ public class MainActivity extends FragmentActivity{
             }
         }
 
-        private static void listFiles(String[] fileName, String fileDirectory) {
+        public void listFiles(String[] fileName, String fileDirectory) {
             File folder = new File(fileDirectory);//Opens a file object with the directory given
             File[] files = folder.listFiles();//Gets an array of file names from file object
             fileName = new String[files.length];
+            int i = fileName.length + 1;
             for (File file : files) {
-                //System.out.println(file.getName());//loops through to print all file names
-                fileName.add(file.getName());
+                //System.out.println(file.getName());//loops through to print all file name
+                //fileName.add(file.getName());
+                fileName[i] = file.getName();
             }
         }
     }
+
 
 }
