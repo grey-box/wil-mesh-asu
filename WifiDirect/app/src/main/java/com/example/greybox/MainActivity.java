@@ -56,6 +56,11 @@ public class MainActivity extends FragmentActivity{
     //message text field to enter message to send to peers
     EditText writeMsg;
 
+    //the list of files from a specificed area
+    ListView fileList;
+    //List of strings for names of the files
+    String[] fileNames;
+
     //Wifi Manager primary API for managing all aspects of WIFI connectivity
     WifiManager wifiManager;
     //Wifi P2p Manager provides specif API for managing WIFI p2p connectivity
@@ -204,6 +209,7 @@ public class MainActivity extends FragmentActivity{
         read_msg_box=(TextView) findViewById(R.id.readMsg);
         connectionStatus=(TextView) findViewById(R.id.connectionStatus);
         writeMsg=(EditText) findViewById(R.id.writeMsg);
+        fileList=(ListView) findViewById(R.id.fileList);
 
         // create wifi manager from the android app context system wifi services
         wifiManager= (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
