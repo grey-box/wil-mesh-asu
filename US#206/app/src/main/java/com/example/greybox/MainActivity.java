@@ -57,7 +57,7 @@ public class MainActivity extends FragmentActivity{
     //the list of files from a specificed area
     ListView fileList;
     //List of strings for names of the files
-    String[] fileNames;
+    List<String> fileNames = new ArrayList<String>();
 
     //Wifi Managers and Channel
     WifiManager wifiManager;
@@ -296,7 +296,7 @@ public class MainActivity extends FragmentActivity{
                 connectionStatus.setText("CLIENT");
                 clientClass = new ClientClass(groupOwnerAddress);
                 clientClass.start();
-                clientClass.listFiles(fileNames, System.getProperty("user.dir"));
+                clientClass.listDeviceFiles(fileNames, System.getProperty("user.dir"));
                 ArrayAdapter<String> fileAdapter = new ArrayAdapter<String>(getApplicationContext(),android.R.layout.simple_list_item_1,fileNames);
                 fileList.setAdapter(fileAdapter);
             }
@@ -396,15 +396,12 @@ public class MainActivity extends FragmentActivity{
             }
         }
 
-        public void listFiles(String[] fileName, String fileDirectory) {
+        public void listDeviceFiles(List<String> fileName, String fileDirectory) {
             File folder = new File(fileDirectory);//Opens a file object with the directory given
-            File[] files = folder.listFiles();//Gets an array of file names from file object
-            fileName = new String[files.length];
-            int i = fileName.length + 1;
+            File[] files = folder.listFiles();//Gets an array of file names from file object;
             for (File file : files) {
                 //System.out.println(file.getName());//loops through to print all file name
-                //fileName.add(file.getName());
-                fileName[i] = file.getName();
+                fileName.add(file.getName());
             }
         }
     }
