@@ -57,7 +57,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void sendMessage() {
-
         String sPhone = etPhone.getText().toString().trim();
         String sMessage = etMessage.getText().toString().trim();
 
@@ -68,14 +67,11 @@ public class MainActivity extends AppCompatActivity {
                     null, sMessage, null, null);
 
             Toast.makeText(getApplicationContext(),
-                    "SMS sent successfully!", Toast.LENGTH_LONG).show();
-
+                    "SMS sent successfully to '" + sPhone + "'!" , Toast.LENGTH_LONG).show();
         }
         else {
-
             Toast.makeText(getApplicationContext(),
-                    "Enter value first.", Toast.LENGTH_SHORT).show();
-
+                    "Enter a phone number and message first.", Toast.LENGTH_SHORT).show();
         }
     }
 

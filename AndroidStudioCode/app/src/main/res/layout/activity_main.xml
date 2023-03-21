@@ -46,5 +46,4 @@
         android:id="@+id/bt_send"
         android:text="Send sms"
         android:layout_marginTop="32dp"/>
-
 </LinearLayout>
