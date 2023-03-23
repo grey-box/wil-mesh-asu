@@ -59,6 +59,9 @@ public class MainActivity extends FragmentActivity{
     //List of strings for names of the files
     List<String> fileNames = new ArrayList<String>();
 
+    //gets the file directory, can be hardcoded when we figure out the pathway
+    String fileDestination = getApplicationInfo().dataDir;
+
     //Wifi Managers and Channel
     WifiManager wifiManager;
     WifiP2pManager mManager;
@@ -221,6 +224,9 @@ public class MainActivity extends FragmentActivity{
         writeMsg=(EditText) findViewById(R.id.writeMsg);
 
         fileList=(ListView) findViewById(R.id.fileList);
+        listDeviceFiles(fileNames,fileDestination);
+        ArrayAdapter<String> fileAdapter = new ArrayAdapter<String>(getApplicationContext(),android.R.layout.simple_list_item_1,fileNames);
+        fileList.setAdapter(fileAdapter);
 
 
         // create wifi manager from the android app context system wifi services
@@ -272,6 +278,8 @@ public class MainActivity extends FragmentActivity{
                 // add all the device names to an adapter then add the adapter to the layout listview
                 ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(),android.R.layout.simple_list_item_1,deviceNameArray);
                 listView.setAdapter(adapter);
+
+
             }
 
             // if no peers found pop-up "No Device Found"
@@ -296,9 +304,6 @@ public class MainActivity extends FragmentActivity{
                 connectionStatus.setText("CLIENT");
                 clientClass = new ClientClass(groupOwnerAddress);
                 clientClass.start();
-                clientClass.listDeviceFiles(fileNames, System.getProperty("user.dir"));
-                ArrayAdapter<String> fileAdapter = new ArrayAdapter<String>(getApplicationContext(),android.R.layout.simple_list_item_1,fileNames);
-                fileList.setAdapter(fileAdapter);
             }
         }
     };
@@ -395,16 +400,14 @@ public class MainActivity extends FragmentActivity{
                 throw new RuntimeException(e);
             }
         }
-
-        public void listDeviceFiles(List<String> fileName, String fileDirectory) {
-            File folder = new File(fileDirectory);//Opens a file object with the directory given
-            File[] files = folder.listFiles();//Gets an array of file names from file object;
-            for (File file : files) {
-                //System.out.println(file.getName());//loops through to print all file name
-                fileName.add(file.getName());
-            }
-        }
     }
 
-
+    public void listDeviceFiles(List<String> fileName, String fileDirectory) {
+        File folder = new File(fileDirectory);//Opens a file object with the directory given
+        File[] files = folder.listFiles();//Gets an array of file names from file object;
+        for (File file : files) {
+            //System.out.println(file.getName());//loops through to print all file name
+            fileName.add(file.getName());
+        }
+    }
 }
