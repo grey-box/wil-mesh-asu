@@ -59,9 +59,6 @@ public class MainActivity extends FragmentActivity{
     //List of strings for names of the files
     List<String> fileNames = new ArrayList<String>();
 
-    //gets the file directory, can be hardcoded when we figure out the pathway
-    String fileDestination = getApplicationInfo().dataDir;
-
     //Wifi Managers and Channel
     WifiManager wifiManager;
     WifiP2pManager mManager;
@@ -224,7 +221,7 @@ public class MainActivity extends FragmentActivity{
         writeMsg=(EditText) findViewById(R.id.writeMsg);
 
         fileList=(ListView) findViewById(R.id.fileList);
-        listDeviceFiles(fileNames,fileDestination);
+        listDeviceFiles(fileNames,getApplicationInfo().dataDir);
         ArrayAdapter<String> fileAdapter = new ArrayAdapter<String>(getApplicationContext(),android.R.layout.simple_list_item_1,fileNames);
         fileList.setAdapter(fileAdapter);
 
