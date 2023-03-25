@@ -9,6 +9,7 @@ import android.widget.Toast;
 
 /*
     JSGARVEY 03/03/23 - US#206 Citations:
+    https://developer.android.com/training/connect-devices-wirelessly/wifi-direct#create-group
     Sarthi Technology - https://www.youtube.com/playlist?list=PLFh8wpMiEi88SIJ-PnJjDxktry4lgBtN3
  */
 public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
@@ -31,8 +32,9 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
 
+        // Get the type of intent of action received by broadcast receiver
         String action = intent.getAction();
-        // check to see if Wifi state has changed
+        // check to see if Wifi state has changed meaning if the wifi has been turned off or not
         if(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION.equals(action)){
             // returns state value as int or -1 if no value found
             int state = intent.getIntExtra(WifiP2pManager.EXTRA_WIFI_STATE,-1);

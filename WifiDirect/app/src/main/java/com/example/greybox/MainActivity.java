@@ -43,6 +43,7 @@ import java.util.List;
 
 /*
     JSGARVEY 03/03/23 - US#206 Citations:
+    https://developer.android.com/training/connect-devices-wirelessly/wifi-direct#create-group
     Sarthi Technology - https://www.youtube.com/playlist?list=PLFh8wpMiEi88SIJ-PnJjDxktry4lgBtN3
  */
 public class MainActivity extends FragmentActivity{
@@ -167,6 +168,8 @@ public class MainActivity extends FragmentActivity{
                 WifiP2pConfig config = new WifiP2pConfig();
                 // Set config device address from chosen device
                 config.deviceAddress = device.deviceAddress;
+
+
                 // Start a p2p connection to a device with specified config
                 mManager.connect(mChannel, config, new WifiP2pManager.ActionListener() {
                     // Called when device successfully connected
