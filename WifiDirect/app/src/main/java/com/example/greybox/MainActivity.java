@@ -89,7 +89,8 @@ public class MainActivity extends FragmentActivity{
 
     ServerClass serverClass;
     ClientClass clientClass;
-    SendReceive sendReceive;
+
+    WifiP2pInfo mWifiP2pInfo;
 
     //imported override method onCreate. Initialize the the activity.
     @Override
@@ -111,6 +112,41 @@ public class MainActivity extends FragmentActivity{
         initialWork();
         // adding listeners to the objects
         exListener();
+
+    }
+
+    // initial work for creating objects from onCreate()
+    private void initialWork() {
+        // create layout objects
+        btnOnOff=(Button) findViewById(R.id.onOff);
+        btnDiscover=(Button) findViewById(R.id.discover);
+        btnSend=(Button) findViewById(R.id.sendButton);
+        listView=(ListView) findViewById(R.id.peerListView);
+        read_msg_box=(TextView) findViewById(R.id.readMsg);
+        connectionStatus=(TextView) findViewById(R.id.connectionStatus);
+        writeMsg=(EditText) findViewById(R.id.writeMsg);
+        fileList=(ListView) findViewById(R.id.fileList);
+
+        // create wifi manager from the android app context system wifi services
+        wifiManager= (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+
+        // create wifi p2p manager providing the API for managing Wifi peer-to-peer connectivity
+        mManager = (WifiP2pManager) getApplicationContext().getSystemService(Context.WIFI_P2P_SERVICE);
+        // a channel that connects the app to the wifi p2p framework.
+        mChannel = mManager.initialize(this, getMainLooper(),null);
+
+        // create wifi broadcast receiver to receive events from the wifi manager
+        mReceiver = new WifiDirectBroadcastReceiver(mManager, mChannel, this);
+        mIntentFilter = new IntentFilter();
+        // indicates whether WiFi P2P is enabled
+        mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
+        // indicates that the available peer list has changed
+        mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
+        // indicates the state of Wifi P2P connectivity has changed
+        mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
+        //indicates this device's configuration details have changed
+        mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
+
 
     }
 
@@ -194,45 +230,17 @@ public class MainActivity extends FragmentActivity{
             public void onClick(View view) {
                 // get text message from EditText Field
                 String msg = writeMsg.getText().toString();
-                // Class to handle send text message task
-                SendTask task  = new SendTask(msg);
-                task.execute();
+                if(mWifiP2pInfo.isGroupOwner){
+                    // Class to handle send text message task
+                    SendTask task  = new SendTask(msg, serverClass.getSendReceive());
+                    task.execute();
+                }else{
+                    SendTask task  = new SendTask(msg, clientClass.getSendReceive());
+                    task.execute();
+                }
+
             }
         });
-
-    }
-
-    // initial work for creating objects from onCreate()
-    private void initialWork() {
-        // create layout objects
-        btnOnOff=(Button) findViewById(R.id.onOff);
-        btnDiscover=(Button) findViewById(R.id.discover);
-        btnSend=(Button) findViewById(R.id.sendButton);
-        listView=(ListView) findViewById(R.id.peerListView);
-        read_msg_box=(TextView) findViewById(R.id.readMsg);
-        connectionStatus=(TextView) findViewById(R.id.connectionStatus);
-        writeMsg=(EditText) findViewById(R.id.writeMsg);
-        fileList=(ListView) findViewById(R.id.fileList);
-
-        // create wifi manager from the android app context system wifi services
-        wifiManager= (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-
-        // create wifi p2p manager providing the API for managing Wifi peer-to-peer connectivity
-        mManager = (WifiP2pManager) getApplicationContext().getSystemService(Context.WIFI_P2P_SERVICE);
-        // a channel that connects the app to the wifi p2p framework.
-        mChannel = mManager.initialize(this, getMainLooper(),null);
-
-        // create wifi broadcast receiver to receive events from the wifi manager
-        mReceiver = new WifiDirectBroadcastReceiver(mManager, mChannel, this);
-        mIntentFilter = new IntentFilter();
-        // indicates whether WiFi P2P is enabled
-        mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
-        // indicates that the available peer list has changed
-        mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
-        // indicates the state of Wifi P2P connectivity has changed
-        mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
-        //indicates this device's configuration details have changed
-        mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
     }
 
@@ -279,17 +287,18 @@ public class MainActivity extends FragmentActivity{
         // If the connection info is available
         @Override
         public void onConnectionInfoAvailable(WifiP2pInfo wifiP2pInfo) {
+            mWifiP2pInfo = wifiP2pInfo;
             // Get Host Ip Address
             final InetAddress groupOwnerAddress = wifiP2pInfo.groupOwnerAddress;
             // If the connection group exists and the device is connection host
             if (wifiP2pInfo.groupFormed && wifiP2pInfo.isGroupOwner) {
                 connectionStatus.setText("HOST");
-                serverClass = new ServerClass();
+                serverClass = new ServerClass(handler);
                 serverClass.start();
             // If only the connection group exists
             } else if (wifiP2pInfo.groupFormed) {
                 connectionStatus.setText("CLIENT");
-                clientClass = new ClientClass(groupOwnerAddress);
+                clientClass = new ClientClass(groupOwnerAddress,handler);
                 clientClass.start();
 
             }
@@ -333,127 +342,6 @@ public class MainActivity extends FragmentActivity{
     protected void onPause(){
         super.onPause();
         unregisterReceiver(mReceiver);
-    }
-
-    // Class for handling the send task
-    public class SendTask extends AsyncTask<Void,Void,Void>{
-        // Send message string
-        String message;
-        // Pass constructor the string message
-        SendTask(String msg){
-            message=msg;
-        }
-        // Override this method to perform a computation on a background thread.
-        @Override
-        protected Void doInBackground(Void... args0) {
-            // Write message bytes to socket.outputstream
-            sendReceive.write(message.getBytes());
-            return null;
-        }
-        // Runs on the UI thread after doInBackground(Params...)
-        @Override
-        protected void onPostExecute(Void unused) {
-            super.onPostExecute(unused);
-        }
-    }
-
-    // Class for handling socket streams
-    private class SendReceive extends Thread{
-        // A socket is an endpoint for communication between two machines.
-        private Socket socket;
-        // This abstract class is the superclass of all classes representing an input stream of bytes.
-        private InputStream inputStream;
-        // This abstract class is the superclass of all classes representing an output stream of bytes.
-        private OutputStream outputStream;
-        // Constructor passed socket for end-to-end communication
-        public SendReceive(Socket skt){
-            // socket for end to end communication
-            socket = skt;
-            try {
-                // Save input and out as actual variables
-                inputStream = socket.getInputStream();
-                outputStream = socket.getOutputStream();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-        // Method to override that runs when thread starts
-        @Override
-        public void run() {
-            // Stores the transmitted message
-            byte[] buffer = new byte[1024];
-            int bytes;
-            // While socket is still open
-            while(socket!=null){
-                try {
-                    // Read message inputstream from socket and store in variable
-                    bytes = inputStream.read(buffer);
-                    // If there is a message
-                    if(bytes > 0){
-                        // Pass the message to the handler and have the handler save and convert message
-                        // to a string then display the string in the layout
-                        handler.obtainMessage(MESSAGE_READ, bytes, -1, buffer).sendToTarget();
-                    }
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        }
-
-        // Method used by sendtask that writes the message to the socket outputstream
-        public void write(byte[] bytes){
-            try {
-                outputStream.write(bytes);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-    }
-
-    // Server class to be made into own class soon
-    public class ServerClass extends Thread{
-        Socket socket;
-        ServerSocket serverSocket;
-
-        @Override
-        public void run() {
-            try {
-                // Set server socket port number
-                serverSocket = new ServerSocket(8888);
-                // accept and store socket from server socket
-                socket = serverSocket.accept();
-                // Create sendRecieve task to handle socket stream operations
-                sendReceive = new SendReceive(socket);
-                sendReceive.start();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
-    }
-    // Client class to be made into own class soon
-    public class ClientClass extends Thread{
-        Socket socket;
-        String hostAdd;
-        // Constructor passed the server host IpAddress
-        public ClientClass(InetAddress hostAddress){
-            hostAdd = hostAddress.getHostAddress();
-            socket = new Socket();
-        }
-
-        @Override
-        public void run() {
-            try {
-                // try to connect socket to host socket port
-                socket.connect(new InetSocketAddress(hostAdd,8888), 500);
-                // Create sendRecieve task to handle socket stream operations
-                sendReceive = new SendReceive(socket);
-                // Run the sendReceive object
-                sendReceive.start();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }
     }
 
 
