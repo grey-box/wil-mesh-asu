@@ -46,19 +46,17 @@
     </RelativeLayout>
 
 
-
-
     <com.hbb20.CountryCodePicker
+        android:id="@+id/countrycodepicker"
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        app:ccp_areaCodeDetectedCountry="true"
+        android:layout_above="@id/centerhorizontalline"
         android:layout_centerInParent="true"
         android:layout_marginLeft="100dp"
         android:layout_marginRight="100dp"
-        android:id="@+id/countrycodepicker"
-        app:ccp_autoDetectCountry="true"
         android:layout_marginBottom="10dp"
-        android:layout_above="@id/centerhorizontalline">
+        app:ccp_areaCodeDetectedCountry="true"
+        app:ccp_autoDetectCountry="true">
 
     </com.hbb20.CountryCodePicker>
 
