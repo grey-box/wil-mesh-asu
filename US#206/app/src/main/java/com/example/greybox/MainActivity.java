@@ -31,6 +31,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -53,6 +54,10 @@ public class MainActivity extends FragmentActivity{
     TextView read_msg_box, connectionStatus;
     //message text field to enter message to send to peers
     EditText writeMsg;
+    //the list of files from a specificed area
+    ListView fileList;
+    //List of strings for names of the files
+    List<String> fileNames = new ArrayList<String>();
 
     //Wifi Managers and Channel
     WifiManager wifiManager;
@@ -215,6 +220,12 @@ public class MainActivity extends FragmentActivity{
         connectionStatus=(TextView) findViewById(R.id.connectionStatus);
         writeMsg=(EditText) findViewById(R.id.writeMsg);
 
+        fileList=(ListView) findViewById(R.id.fileList);
+        listDeviceFiles(fileNames,getApplicationInfo().dataDir);
+        ArrayAdapter<String> fileAdapter = new ArrayAdapter<String>(getApplicationContext(),android.R.layout.simple_list_item_1,fileNames);
+        fileList.setAdapter(fileAdapter);
+
+
         // create wifi manager from the android app context system wifi services
         wifiManager= (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 
@@ -264,6 +275,8 @@ public class MainActivity extends FragmentActivity{
                 // add all the device names to an adapter then add the adapter to the layout listview
                 ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(),android.R.layout.simple_list_item_1,deviceNameArray);
                 listView.setAdapter(adapter);
+
+
             }
 
             // if no peers found pop-up "No Device Found"
@@ -386,4 +399,12 @@ public class MainActivity extends FragmentActivity{
         }
     }
 
+    public void listDeviceFiles(List<String> fileName, String fileDirectory) {
+        File folder = new File(fileDirectory);//Opens a file object with the directory given
+        File[] files = folder.listFiles();//Gets an array of file names from file object;
+        for (File file : files) {
+            //System.out.println(file.getName());//loops through to print all file name
+            fileName.add(file.getName());
+        }
+    }
 }
