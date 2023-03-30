@@ -98,10 +98,10 @@ public class MainActivity extends FragmentActivity{
         super.onCreate(savedInstanceState);
         // call a the layout resource defining the UI
         setContentView(R.layout.activity_main);
-        //JSGARVEY pop on device notifying if device supports wifi p2p
-        if(getPackageManager().hasSystemFeature("android.hardware.wifi.direct")){
-            Toast.makeText(getApplicationContext(), "WIFI DIRECT SUPPORTED!!!", Toast.LENGTH_SHORT).show();
-        }
+//        //JSGARVEY pop on device notifying if device supports wifi p2p
+//        if(getPackageManager().hasSystemFeature("android.hardware.wifi.direct")){
+//            Toast.makeText(getApplicationContext(), "WIFI DIRECT SUPPORTED!!!", Toast.LENGTH_SHORT).show();
+//        }
         //Pop up notifying user to enable location services and permissions
         /* LocationManager manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
             if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
@@ -164,12 +164,12 @@ public class MainActivity extends FragmentActivity{
 
             @Override
             public void onClick(View view) {
-                if(wifiManager.isWifiEnabled()){
+                if(getPackageManager().hasSystemFeature("android.hardware.wifi.direct")){
                     wifiManager.setWifiEnabled(false);
-                    btnOnOff.setText("WIFI Enabled: " + wifiManager.isWifiEnabled());
+                    btnOnOff.setText("WIFI-P2P: Supported");
                 }else{
                     wifiManager.setWifiEnabled(true);
-                    btnOnOff.setText("WIFI Enabled: "+ wifiManager.isWifiEnabled());
+                    btnOnOff.setText("WIFI-P2P: Not Supported");
                 }
             }
         });
