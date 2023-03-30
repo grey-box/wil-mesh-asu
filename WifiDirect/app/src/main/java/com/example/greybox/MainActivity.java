@@ -161,7 +161,6 @@ public class MainActivity extends FragmentActivity{
         setWifiEnabled() is Deprecated
         */
         btnOnOff.setOnClickListener(new View.OnClickListener() {
-
             @Override
             public void onClick(View view) {
                 if(getPackageManager().hasSystemFeature("android.hardware.wifi.direct")){
