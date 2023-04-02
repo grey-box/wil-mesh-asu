@@ -2,26 +2,18 @@ package com.example.greybox;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.FragmentActivity;
-
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.FeatureInfo;
-import android.content.pm.PackageManager;
-import android.location.LocationManager;
-import android.net.InetAddresses;
 import android.net.wifi.WifiManager;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.provider.Settings;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -30,14 +22,7 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -49,7 +34,7 @@ import java.util.List;
 public class MainActivity extends FragmentActivity{
 
     // Add Button Objects
-    Button btnOnOff, btnDiscover, btnSend;
+    Button btnDiscover, btnSend;
     // Add list view for available peer list
     ListView listView;
     // message text view for read message and connection status
@@ -57,7 +42,7 @@ public class MainActivity extends FragmentActivity{
     //message text field to enter message to send to peers
     EditText writeMsg;
 
-    //the list of files from a specificed area
+    //the list of files from a specified area
     ListView fileList;
     //List of strings for names of the files
     String[] fileNames;
@@ -89,7 +74,6 @@ public class MainActivity extends FragmentActivity{
 
     ServerClass serverClass;
     ClientClass clientClass;
-
     WifiP2pInfo mWifiP2pInfo;
 
     //imported override method onCreate. Initialize the the activity.
@@ -98,16 +82,19 @@ public class MainActivity extends FragmentActivity{
         super.onCreate(savedInstanceState);
         // call a the layout resource defining the UI
         setContentView(R.layout.activity_main);
-//        //JSGARVEY pop on device notifying if device supports wifi p2p
-//        if(getPackageManager().hasSystemFeature("android.hardware.wifi.direct")){
-//            Toast.makeText(getApplicationContext(), "WIFI DIRECT SUPPORTED!!!", Toast.LENGTH_SHORT).show();
-//        }
-        //Pop up notifying user to enable location services and permissions
-        /* LocationManager manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+        //JSGARVEY pop on device notifying if device supports wifi p2p
+        if(getPackageManager().hasSystemFeature("android.hardware.wifi.direct")){
+            Toast.makeText(getApplicationContext(), "WIFI DIRECT SUPPORTED!!!", Toast.LENGTH_SHORT).show();
+        }
+
+        /*//Pop up notifying user to enable location services and permissions
+         LocationManager manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
             if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             Toast.makeText(this, "PLEASE ENABLE LOCATION SERVICES FOR SYSTEM AND PERMISSION FOR APP", Toast.LENGTH_LONG).show();
             startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
         }*/
+
         // creating objects
         initialWork();
         // adding listeners to the objects
@@ -118,7 +105,6 @@ public class MainActivity extends FragmentActivity{
     // initial work for creating objects from onCreate()
     private void initialWork() {
         // create layout objects
-        btnOnOff=(Button) findViewById(R.id.onOff);
         btnDiscover=(Button) findViewById(R.id.discover);
         btnSend=(Button) findViewById(R.id.sendButton);
         listView=(ListView) findViewById(R.id.peerListView);
@@ -147,31 +133,10 @@ public class MainActivity extends FragmentActivity{
         //indicates this device's configuration details have changed
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
-
     }
 
     // implemented method for app object action listeners
     private void exListener(){
-        /*
-        (!!! NOT WORKING!!!)
-        Wifi Enabled: button to turn wifi on and off when clicked if wifi is enabled
-        turn wifi off and switch button label. If wifi is disabled already, turn wifi on.
-        Android no longer allows app automation to turn wifi on or off for Android 10+ SDK29+
-        sdk and android must be Android Pie 9 SDK 28 or less!!!!!!
-        setWifiEnabled() is Deprecated
-        */
-        btnOnOff.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if(getPackageManager().hasSystemFeature("android.hardware.wifi.direct")){
-                    wifiManager.setWifiEnabled(false);
-                    btnOnOff.setText("WIFI-P2P: Supported");
-                }else{
-                    wifiManager.setWifiEnabled(true);
-                    btnOnOff.setText("WIFI-P2P: Not Supported");
-                }
-            }
-        });
 
         // Discover button to discover peers on the same network
         btnDiscover.setOnClickListener(new View.OnClickListener() {
