@@ -33,19 +33,11 @@ import java.util.List;
  */
 public class MainActivity extends FragmentActivity{
 
-    // Add Button Objects
     Button btnDiscover, btnSend;
-    // Add list view for available peer list
     ListView listView;
-    // message text view for read message and connection status
     TextView read_msg_box, connectionStatus;
-    //message text field to enter message to send to peers
     EditText writeMsg;
-
-    //the list of files from a specified area
     ListView fileList;
-    //List of strings for names of the files
-    String[] fileNames;
 
     //Wifi Manager primary API for managing all aspects of WIFI connectivity
     WifiManager wifiManager;
@@ -71,7 +63,6 @@ public class MainActivity extends FragmentActivity{
 
     // Hardcoded value that indicates to the handler that message has been read
     static final int MESSAGE_READ = 1;
-
     ServerClass serverClass;
     ClientClass clientClass;
     WifiP2pInfo mWifiP2pInfo;
@@ -82,47 +73,36 @@ public class MainActivity extends FragmentActivity{
         super.onCreate(savedInstanceState);
         // call a the layout resource defining the UI
         setContentView(R.layout.activity_main);
-
-        //JSGARVEY pop on device notifying if device supports wifi p2p
+        //pop up notifying if device supports wifi p2p
         if(getPackageManager().hasSystemFeature("android.hardware.wifi.direct")){
-            Toast.makeText(getApplicationContext(), "WIFI DIRECT SUPPORTED!!!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), "WIFI DIRECT SUPPORTED", Toast.LENGTH_SHORT).show();
         }
-
-        /*//Pop up notifying user to enable location services and permissions
-         LocationManager manager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-            if (!manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            Toast.makeText(this, "PLEASE ENABLE LOCATION SERVICES FOR SYSTEM AND PERMISSION FOR APP", Toast.LENGTH_LONG).show();
-            startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
-        }*/
-
         // creating objects
         initialWork();
         // adding listeners to the objects
         exListener();
-
     }
 
     // initial work for creating objects from onCreate()
     private void initialWork() {
         // create layout objects
-        btnDiscover=(Button) findViewById(R.id.discover);
-        btnSend=(Button) findViewById(R.id.sendButton);
-        listView=(ListView) findViewById(R.id.peerListView);
-        read_msg_box=(TextView) findViewById(R.id.readMsg);
-        connectionStatus=(TextView) findViewById(R.id.connectionStatus);
-        writeMsg=(EditText) findViewById(R.id.writeMsg);
-        fileList=(ListView) findViewById(R.id.fileList);
+        btnDiscover= findViewById(R.id.discover);
+        btnSend= findViewById(R.id.sendButton);
+        listView= findViewById(R.id.peerListView);
+        read_msg_box= findViewById(R.id.readMsg);
+        connectionStatus= findViewById(R.id.connectionStatus);
+        writeMsg = findViewById(R.id.writeMsg);
+        fileList = findViewById(R.id.fileList);
 
         // create wifi manager from the android app context system wifi services
         wifiManager= (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-
         // create wifi p2p manager providing the API for managing Wifi peer-to-peer connectivity
         mManager = (WifiP2pManager) getApplicationContext().getSystemService(Context.WIFI_P2P_SERVICE);
         // a channel that connects the app to the wifi p2p framework.
         mChannel = mManager.initialize(this, getMainLooper(),null);
-
         // create wifi broadcast receiver to receive events from the wifi manager
         mReceiver = new WifiDirectBroadcastReceiver(mManager, mChannel, this);
+
         mIntentFilter = new IntentFilter();
         // indicates whether WiFi P2P is enabled
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
@@ -130,7 +110,7 @@ public class MainActivity extends FragmentActivity{
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
         // indicates the state of Wifi P2P connectivity has changed
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
-        //indicates this device's configuration details have changed
+        // indicates this device's configuration details have changed
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
     }

@@ -47,14 +47,16 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
                 Toast.makeText(context, "WIFI IS  OFF",Toast.LENGTH_SHORT).show();
             }
         // else if the peers list in wifi p2p manager has changed
-        }else if(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION.equals(action)){
+        }
+        else if(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION.equals(action)){
             //if wifi p2p manager is not null meaning there are peers to list
             if(mManager!=null){
                 // gets a list of current peers in p2p manager
                 mManager.requestPeers(mChannel, mActivity.peerListListener);
             }
         // respond to new connections or disconnections (connection changed intent)
-        }else if(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION.equals(action)){
+        }
+        else if(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION.equals(action)){
             // If no manager for the connection exists then return
             if(mManager==null)
             {
@@ -67,7 +69,6 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
             /* !!!DEPRECATED!!!
                 https://developer.android.com/reference/android/net/NetworkInfo
                 Checks if network connectivity exists and connection can be established
-                !!!Always returns true!!!
              */
             if(networkInfo.isConnected()){
                 mManager.requestConnectionInfo(mChannel,mActivity.connectionInfoListener);
@@ -75,7 +76,8 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
                 mActivity.connectionStatus.setText("DEVICE DISCONNECTED");
             }
         // respond to this device's wifi state changing
-        }else if(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)){
+        }
+        else if(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)){
             // TBD
         }
     }
