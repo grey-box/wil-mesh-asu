@@ -23,25 +23,3 @@ allprojects {
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
-
-signingConfigs {
-    debug {
-        storeFile file('keystores/debug.keystore')
-    }
-    release {
-        storeFile file('keystores/release.keystore')
-        keyAlias ...
-        storePassword ...
-        keyPassword ...
-    }
-}
-buildTypes {
-    debug {
-        signingConfig signingConfigs.debug
-        debuggable true
-    }
-    release {
-        signingConfig signingConfigs.release
-        debuggable false
-    }
-}
