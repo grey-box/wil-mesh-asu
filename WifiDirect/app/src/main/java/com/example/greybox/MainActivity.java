@@ -6,6 +6,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.IntentFilter;
 import android.net.wifi.WifiManager;
+import android.net.wifi.WpsInfo;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
@@ -143,28 +144,47 @@ public class MainActivity extends FragmentActivity{
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
                 // this array is where the devices are stored for connections
-                final WifiP2pDevice device = deviceArray[i];
+                WifiP2pDevice device = deviceArray[i];
                 // Config for setting up p2p connection
                 WifiP2pConfig config = new WifiP2pConfig();
                 // Set config device address from chosen device
                 config.deviceAddress = device.deviceAddress;
 
+                if(!(mWifiP2pInfo == null)){
+                    if(mWifiP2pInfo.groupFormed){
+                        mManager.connect(mChannel, config, new WifiP2pManager.ActionListener() {
+                            // Called when device successfully connected
+                            @Override
+                            public void onSuccess() {
+                                // Pop-up notifying device connected
+                                Toast.makeText(getApplicationContext(),"CONNECTING TO "+device.deviceName, Toast.LENGTH_SHORT).show();
+                            }
+                            // Called when device NOT successfully connected
+                            @Override
+                            public void onFailure(int i) {
+                                // Pop-up notifying device NOT connected
+                                Toast.makeText(getApplicationContext(),"NOT CONNECTED", Toast.LENGTH_SHORT).show();
+                            }
+                        });
 
-                // Start a p2p connection to a device with specified config
-                mManager.connect(mChannel, config, new WifiP2pManager.ActionListener() {
-                    // Called when device successfully connected
-                    @Override
-                    public void onSuccess() {
-                        // Pop-up notifying device connected
-                        Toast.makeText(getApplicationContext(),"CONNECTED TO "+device.deviceName, Toast.LENGTH_SHORT).show();
                     }
-                    // Called when device NOT successfully connected
-                    @Override
-                    public void onFailure(int i) {
-                        // Pop-up notifying device NOT connected
-                        Toast.makeText(getApplicationContext(),"NOT CONNECTED", Toast.LENGTH_SHORT).show();
-                    }
-                });
+                }
+                else{
+                    mManager.createGroup(mChannel, new WifiP2pManager.ActionListener() {
+                        // Called when device successfully connected
+                        @Override
+                        public void onSuccess() {
+                            // Pop-up notifying device connected
+                            Toast.makeText(getApplicationContext(),"CREATING GROUP WITH "+device.deviceName, Toast.LENGTH_SHORT).show();
+                        }
+                        // Called when device NOT successfully connected
+                        @Override
+                        public void onFailure(int i) {
+                            // Pop-up notifying device NOT connected
+                            Toast.makeText(getApplicationContext(),"GROUP NOT CREATED", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                }
             }
         });
 
@@ -194,7 +214,6 @@ public class MainActivity extends FragmentActivity{
         // override method to find peers available
         @Override
         public void onPeersAvailable(WifiP2pDeviceList peerList) {
-            Toast.makeText(getApplicationContext(), "Peers Available", Toast.LENGTH_SHORT).show();
             // if the peer previous peer list does not equal current peer list gotten by listener
             // the peers list has changed and we want to store the new list instead
             if(!peerList.getDeviceList().equals(peers)){
@@ -222,7 +241,6 @@ public class MainActivity extends FragmentActivity{
                 Toast.makeText(getApplicationContext(), "No Device Found", Toast.LENGTH_SHORT).show();
                 return;
             }
-
         }
     };
 
@@ -237,17 +255,18 @@ public class MainActivity extends FragmentActivity{
             // If the connection group exists and the device is connection host
             if (wifiP2pInfo.groupFormed && wifiP2pInfo.isGroupOwner) {
                 connectionStatus.setText("HOST");
-                serverClass = new ServerClass(handler);
-                serverClass.start();
+//                serverClass = new ServerClass(handler);
+//                serverClass.start();
             // If only the connection group exists
             } else if (wifiP2pInfo.groupFormed) {
                 connectionStatus.setText("CLIENT");
-                clientClass = new ClientClass(groupOwnerAddress,handler);
-                clientClass.start();
+//                clientClass = new ClientClass(groupOwnerAddress, handler);
+//                clientClass.start();
 
             }
         }
     };
+
 
     // A Handler allows you to send and process Message and Runnable objects associated with a
     // thread's MessageQueue. Each Handler instance is associated with a single thread and that
