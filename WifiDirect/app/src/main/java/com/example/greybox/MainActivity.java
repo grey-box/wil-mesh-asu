@@ -68,6 +68,8 @@ public class MainActivity extends FragmentActivity{
     ClientClass clientClass;
     WifiP2pInfo mWifiP2pInfo;
 
+    boolean connected = false;
+
     //imported override method onCreate. Initialize the the activity.
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -160,6 +162,7 @@ public class MainActivity extends FragmentActivity{
                             public void onSuccess() {
                                 // Pop-up notifying device connected
                                 Toast.makeText(getApplicationContext(),"CONNECTING TO "+address.toString(), Toast.LENGTH_SHORT).show();
+                                connected = true;
                             }
                             // Called when device NOT successfully connected
                             @Override
@@ -177,6 +180,7 @@ public class MainActivity extends FragmentActivity{
                         public void onSuccess() {
                             // Pop-up notifying device connected
                             Toast.makeText(getApplicationContext(),"CONNECTING TO "+device.deviceName, Toast.LENGTH_SHORT).show();
+                            connected = true;
                         }
                         // Called when device NOT successfully connected
                         @Override
@@ -229,8 +233,29 @@ public class MainActivity extends FragmentActivity{
                     deviceNameArray[index] = device.deviceName;
                     deviceArray[index] = device;
                     index++;
-                }
 
+                    if(device.isGroupOwner() && !connected && !device.deviceName.equals("John's Roku")){
+                        WifiP2pConfig config = new WifiP2pConfig();
+                        // Set config device address from chosen device
+                        config.deviceAddress = device.deviceAddress;
+                        mManager.connect(mChannel, config, new WifiP2pManager.ActionListener() {
+                            // Called when device successfully connected
+                            @Override
+                            public void onSuccess() {
+                                // Pop-up notifying device connected
+                                Toast.makeText(getApplicationContext(),"CONNECTING TO GO "+device.deviceName, Toast.LENGTH_SHORT).show();
+                                connected = true;
+                            }
+                            // Called when device NOT successfully connected
+                            @Override
+                            public void onFailure(int i) {
+                                // Pop-up notifying device NOT connected
+                                Toast.makeText(getApplicationContext(),"NOT CONNECTED", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+
+                }
                 // add all the device names to an adapter then add the adapter to the layout listview
                 ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(),android.R.layout.simple_list_item_1,deviceNameArray);
                 listView.setAdapter(adapter);
