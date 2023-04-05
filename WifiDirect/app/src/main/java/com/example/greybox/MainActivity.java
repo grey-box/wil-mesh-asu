@@ -10,6 +10,7 @@ import android.net.wifi.WpsInfo;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
+import android.net.wifi.p2p.WifiP2pGroup;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
@@ -127,6 +128,7 @@ public class MainActivity extends FragmentActivity{
             public void onClick(View view) {
                 // listener discovering peers from broadcast channel
                 mManager.discoverPeers(mChannel, new WifiP2pManager.ActionListener() {
+
                     // if listener created successfully display Discovery Started
                     @Override
                     public void onSuccess() {
@@ -234,27 +236,6 @@ public class MainActivity extends FragmentActivity{
                     deviceArray[index] = device;
                     index++;
 
-                    if(device.isGroupOwner() && !connected && !device.deviceName.equals("John's Roku")){
-                        WifiP2pConfig config = new WifiP2pConfig();
-                        // Set config device address from chosen device
-                        config.deviceAddress = device.deviceAddress;
-                        mManager.connect(mChannel, config, new WifiP2pManager.ActionListener() {
-                            // Called when device successfully connected
-                            @Override
-                            public void onSuccess() {
-                                // Pop-up notifying device connected
-                                Toast.makeText(getApplicationContext(),"CONNECTING TO GO "+device.deviceName, Toast.LENGTH_SHORT).show();
-                                connected = true;
-                            }
-                            // Called when device NOT successfully connected
-                            @Override
-                            public void onFailure(int i) {
-                                // Pop-up notifying device NOT connected
-                                Toast.makeText(getApplicationContext(),"NOT CONNECTED", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-                    }
-
                 }
                 // add all the device names to an adapter then add the adapter to the layout listview
                 ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(),android.R.layout.simple_list_item_1,deviceNameArray);
@@ -289,6 +270,13 @@ public class MainActivity extends FragmentActivity{
 //                clientClass.start();
 
             }
+        }
+    };
+
+    WifiP2pManager.GroupInfoListener groupInfoListener = new WifiP2pManager.GroupInfoListener(){
+        @Override
+        public void onGroupInfoAvailable(WifiP2pGroup wifiP2pGroup) {
+            read_msg_box.setText("GROUP OWNER FOUND: "+wifiP2pGroup.getOwner());
         }
     };
 
