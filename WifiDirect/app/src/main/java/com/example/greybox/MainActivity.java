@@ -152,12 +152,14 @@ public class MainActivity extends FragmentActivity{
 
                 if(!(mWifiP2pInfo == null)){
                     if(mWifiP2pInfo.groupFormed){
+                        InetAddress address =  mWifiP2pInfo.groupOwnerAddress;
+                        config.deviceAddress = address.toString();
                         mManager.connect(mChannel, config, new WifiP2pManager.ActionListener() {
                             // Called when device successfully connected
                             @Override
                             public void onSuccess() {
                                 // Pop-up notifying device connected
-                                Toast.makeText(getApplicationContext(),"CONNECTING TO "+device.deviceName, Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getApplicationContext(),"CONNECTING TO "+address.toString(), Toast.LENGTH_SHORT).show();
                             }
                             // Called when device NOT successfully connected
                             @Override
@@ -166,22 +168,21 @@ public class MainActivity extends FragmentActivity{
                                 Toast.makeText(getApplicationContext(),"NOT CONNECTED", Toast.LENGTH_SHORT).show();
                             }
                         });
-
                     }
                 }
                 else{
-                    mManager.createGroup(mChannel, new WifiP2pManager.ActionListener() {
+                    mManager.connect(mChannel, config, new WifiP2pManager.ActionListener() {
                         // Called when device successfully connected
                         @Override
                         public void onSuccess() {
                             // Pop-up notifying device connected
-                            Toast.makeText(getApplicationContext(),"CREATING GROUP WITH "+device.deviceName, Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getApplicationContext(),"CONNECTING TO "+device.deviceName, Toast.LENGTH_SHORT).show();
                         }
                         // Called when device NOT successfully connected
                         @Override
                         public void onFailure(int i) {
                             // Pop-up notifying device NOT connected
-                            Toast.makeText(getApplicationContext(),"GROUP NOT CREATED", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getApplicationContext(),"NOT CONNECTED", Toast.LENGTH_SHORT).show();
                         }
                     });
                 }
@@ -205,7 +206,6 @@ public class MainActivity extends FragmentActivity{
 
             }
         });
-
     }
 
     // Wifi P2P Manager peer list listener for collecting list of wifi peers
