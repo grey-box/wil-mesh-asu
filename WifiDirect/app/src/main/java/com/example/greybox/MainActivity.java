@@ -1,6 +1,7 @@
 package com.example.greybox;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.FragmentActivity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -153,27 +154,28 @@ public class MainActivity extends FragmentActivity{
                 WifiP2pConfig config = new WifiP2pConfig();
                 // Set config device address from chosen device
                 config.deviceAddress = device.deviceAddress;
+                config.groupOwnerIntent = 0;
+                config.wps.setup = WpsInfo.PBC;
 
-                if(!(mWifiP2pInfo == null)){
-                    if(mWifiP2pInfo.groupFormed){
-                        InetAddress address =  mWifiP2pInfo.groupOwnerAddress;
-                        config.deviceAddress = address.toString();
-                        mManager.connect(mChannel, config, new WifiP2pManager.ActionListener() {
-                            // Called when device successfully connected
-                            @Override
-                            public void onSuccess() {
-                                // Pop-up notifying device connected
-                                Toast.makeText(getApplicationContext(),"CONNECTING TO "+address.toString(), Toast.LENGTH_SHORT).show();
-                                connected = true;
-                            }
-                            // Called when device NOT successfully connected
-                            @Override
-                            public void onFailure(int i) {
-                                // Pop-up notifying device NOT connected
-                                Toast.makeText(getApplicationContext(),"NOT CONNECTED", Toast.LENGTH_SHORT).show();
-                            }
-                        });
-                    }
+                if(device.isGroupOwner()){
+                    connectionStatus.setText("Connecting to GO");
+
+                    config.wps.setup = WpsInfo.PBC;
+                    mManager.connect(mChannel, config, new WifiP2pManager.ActionListener() {
+                        // Called when device successfully connected
+                        @Override
+                        public void onSuccess() {
+                            // Pop-up notifying device connected
+                            Toast.makeText(getApplicationContext(),"CONNECTING TO "+config.deviceAddress.toString(), Toast.LENGTH_SHORT).show();
+                            connected = true;
+                        }
+                        // Called when device NOT successfully connected
+                        @Override
+                        public void onFailure(int i) {
+                            // Pop-up notifying device NOT connected
+                            Toast.makeText(getApplicationContext(),"NOT CONNECTED", Toast.LENGTH_SHORT).show();
+                        }
+                    });
                 }
                 else{
                     mManager.connect(mChannel, config, new WifiP2pManager.ActionListener() {
@@ -261,13 +263,13 @@ public class MainActivity extends FragmentActivity{
             // If the connection group exists and the device is connection host
             if (wifiP2pInfo.groupFormed && wifiP2pInfo.isGroupOwner) {
                 connectionStatus.setText("HOST");
-//                serverClass = new ServerClass(handler);
-//                serverClass.start();
+                serverClass = new ServerClass(handler);
+                serverClass.start();
             // If only the connection group exists
             } else if (wifiP2pInfo.groupFormed) {
                 connectionStatus.setText("CLIENT");
-//                clientClass = new ClientClass(groupOwnerAddress, handler);
-//                clientClass.start();
+                clientClass = new ClientClass(groupOwnerAddress, handler);
+                clientClass.start();
 
             }
         }
@@ -277,6 +279,13 @@ public class MainActivity extends FragmentActivity{
         @Override
         public void onGroupInfoAvailable(WifiP2pGroup wifiP2pGroup) {
             read_msg_box.setText("GROUP OWNER FOUND: "+wifiP2pGroup.getOwner());
+        }
+    };
+
+    WifiP2pManager.DeviceInfoListener deviceInfoListener = new WifiP2pManager.DeviceInfoListener() {
+        @Override
+        public void onDeviceInfoAvailable(@Nullable WifiP2pDevice wifiP2pDevice) {
+            Toast.makeText(getApplicationContext(), "ADDRESS = "+wifiP2pDevice.deviceAddress, Toast.LENGTH_SHORT).show();
         }
     };
 

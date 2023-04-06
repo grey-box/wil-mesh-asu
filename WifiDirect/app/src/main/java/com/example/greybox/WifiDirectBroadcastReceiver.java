@@ -44,6 +44,7 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
         else if(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION.equals(action)){
             // If no manager for the connection exists then return
             if(mManager==null) { return; }
+            mManager.requestConnectionInfo(mChannel,mActivity.connectionInfoListener);
             /* !!!DEPRECATED!!!
                 Object for storing addition network information
              */
@@ -52,18 +53,12 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
                 https://developer.android.com/reference/android/net/NetworkInfo
                 Checks if network connectivity exists and connection can be established
              */
-            if(networkInfo.isConnected()){
-                mManager.requestConnectionInfo(mChannel,mActivity.connectionInfoListener);
-            }else{
-                mActivity.connectionStatus.setText("DEVICE DISCONNECTED");
-            }
+//            if(networkInfo.isConnected()){
+//                mManager.requestConnectionInfo(mChannel,mActivity.connectionInfoListener);
+//            }else{
+//                mActivity.connectionStatus.setText("DEVICE DISCONNECTED");
+//            }
 
-        // respond to this device's wifi state changing
-        }
-        else if(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)){
-            // TBD
-        }
-        else if(WifiP2pManager.EXTRA_WIFI_P2P_GROUP.equals(action)){
             WifiP2pGroup group = intent.getParcelableExtra(WifiP2pManager.EXTRA_WIFI_P2P_GROUP);
             if (group != null) {
                 // Use the group object to retrieve group information
@@ -73,6 +68,13 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
                 // Do something with the retrieved group information
                 mManager.requestGroupInfo(mChannel, mActivity.groupInfoListener);
             }
+
+        // respond to this device's wifi state changing
+        }
+        else if(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)){
+            mManager.requestDeviceInfo(mChannel, mActivity.deviceInfoListener);
         }
     }
+
+
 }
