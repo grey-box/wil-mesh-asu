@@ -158,7 +158,7 @@ public class MainActivity extends FragmentActivity{
                 config.wps.setup = WpsInfo.PBC;
 
                 if(device.isGroupOwner()){
-                    connectionStatus.setText("Connecting to GO");
+                    connectionStatus.setText("Connecting to GO "+ device.deviceName+"|"+device.deviceAddress);
 
                     config.wps.setup = WpsInfo.PBC;
                     mManager.connect(mChannel, config, new WifiP2pManager.ActionListener() {
@@ -236,6 +236,10 @@ public class MainActivity extends FragmentActivity{
                 for(WifiP2pDevice device : peerList.getDeviceList()){
                     deviceNameArray[index] = device.deviceName;
                     deviceArray[index] = device;
+
+                    if(device.isGroupOwner()){
+                        connectionStatus.setText("GO FOUND "+device.deviceName);
+                    }
                     index++;
 
                 }
@@ -263,13 +267,13 @@ public class MainActivity extends FragmentActivity{
             // If the connection group exists and the device is connection host
             if (wifiP2pInfo.groupFormed && wifiP2pInfo.isGroupOwner) {
                 connectionStatus.setText("HOST");
-                serverClass = new ServerClass(handler);
-                serverClass.start();
+//                serverClass = new ServerClass(handler);
+//                serverClass.start();
             // If only the connection group exists
             } else if (wifiP2pInfo.groupFormed) {
                 connectionStatus.setText("CLIENT");
-                clientClass = new ClientClass(groupOwnerAddress, handler);
-                clientClass.start();
+//                clientClass = new ClientClass(groupOwnerAddress, handler);
+//                clientClass.start();
 
             }
         }
