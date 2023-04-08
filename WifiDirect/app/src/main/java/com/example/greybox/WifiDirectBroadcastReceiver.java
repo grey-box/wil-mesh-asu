@@ -75,12 +75,6 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
         else if(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)){
             mManager.requestDeviceInfo(mChannel, mActivity.deviceInfoListener);
         }
-        else if(WifiP2pManager.EXTRA_WIFI_P2P_GROUP.equals(action)){
-            mActivity.connectionStatus.setText("FOUND GROUP");
-        }
-        else if(WifiP2pManager.WIFI_P2P_DISCOVERY_CHANGED_ACTION.equals(action)){
-            mActivity.connectionStatus.setText("FOUND DISCOVERY");
-        }
     }
 
 

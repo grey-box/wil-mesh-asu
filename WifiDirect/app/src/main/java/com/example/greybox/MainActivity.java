@@ -70,6 +70,8 @@ public class MainActivity extends FragmentActivity{
     ClientClass clientClass;
     WifiP2pInfo mWifiP2pInfo;
 
+    boolean groupOwner = false;
+
     boolean connected = false;
 
     //imported override method onCreate. Initialize the the activity.
@@ -154,20 +156,16 @@ public class MainActivity extends FragmentActivity{
                 WifiP2pConfig config = new WifiP2pConfig();
                 // Set config device address from chosen device
                 config.deviceAddress = device.deviceAddress;
-                config.groupOwnerIntent = 0;
                 config.wps.setup = WpsInfo.PBC;
 
                 if(device.isGroupOwner()){
-                    connectionStatus.setText("Connecting to GO "+ device.deviceName+"|"+device.deviceAddress);
-
-                    config.wps.setup = WpsInfo.PBC;
+//                    config.groupOwnerIntent = 0;
                     mManager.connect(mChannel, config, new WifiP2pManager.ActionListener() {
                         // Called when device successfully connected
                         @Override
                         public void onSuccess() {
                             // Pop-up notifying device connected
-                            Toast.makeText(getApplicationContext(),"CONNECTING TO "+config.deviceAddress.toString(), Toast.LENGTH_SHORT).show();
-                            connected = true;
+                            connectionStatus.setText("Connecting to GO "+ device.deviceName);
                         }
                         // Called when device NOT successfully connected
                         @Override
@@ -184,7 +182,6 @@ public class MainActivity extends FragmentActivity{
                         public void onSuccess() {
                             // Pop-up notifying device connected
                             Toast.makeText(getApplicationContext(),"CONNECTING TO "+device.deviceName, Toast.LENGTH_SHORT).show();
-                            connected = true;
                         }
                         // Called when device NOT successfully connected
                         @Override
@@ -261,20 +258,21 @@ public class MainActivity extends FragmentActivity{
         // If the connection info is available
         @Override
         public void onConnectionInfoAvailable(WifiP2pInfo wifiP2pInfo) {
+            connected = true;
             mWifiP2pInfo = wifiP2pInfo;
             // Get Host Ip Address
             final InetAddress groupOwnerAddress = wifiP2pInfo.groupOwnerAddress;
             // If the connection group exists and the device is connection host
-            if (wifiP2pInfo.groupFormed && wifiP2pInfo.isGroupOwner) {
+            if (wifiP2pInfo.groupFormed && wifiP2pInfo.isGroupOwner && !groupOwner) {
                 connectionStatus.setText("HOST");
-//                serverClass = new ServerClass(handler);
-//                serverClass.start();
+                serverClass = new ServerClass(handler);
+                serverClass.start();
+                groupOwner = true;
             // If only the connection group exists
-            } else if (wifiP2pInfo.groupFormed) {
+            } else if (wifiP2pInfo.groupFormed && !groupOwner) {
                 connectionStatus.setText("CLIENT");
-//                clientClass = new ClientClass(groupOwnerAddress, handler);
-//                clientClass.start();
-
+                clientClass = new ClientClass(groupOwnerAddress, handler);
+                clientClass.start();
             }
         }
     };
@@ -282,7 +280,7 @@ public class MainActivity extends FragmentActivity{
     WifiP2pManager.GroupInfoListener groupInfoListener = new WifiP2pManager.GroupInfoListener(){
         @Override
         public void onGroupInfoAvailable(WifiP2pGroup wifiP2pGroup) {
-            read_msg_box.setText("GROUP OWNER FOUND: "+wifiP2pGroup.getOwner());
+            read_msg_box.setText("GO FOUND: "+wifiP2pGroup.getOwner());
         }
     };
 
@@ -322,6 +320,7 @@ public class MainActivity extends FragmentActivity{
     @Override
     protected  void onResume(){
         super.onResume();
+        mReceiver = new WifiDirectBroadcastReceiver(mManager, mChannel, this);
         registerReceiver(mReceiver,mIntentFilter);
     }
 
