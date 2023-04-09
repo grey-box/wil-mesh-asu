@@ -58,22 +58,6 @@
 
         </com.google.android.material.tabs.TabItem>
 
-        <com.google.android.material.tabs.TabItem
-            android:id="@+id/status"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Status">
-
-        </com.google.android.material.tabs.TabItem>
-
-        <com.google.android.material.tabs.TabItem
-            android:id="@+id/calls"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Calls">
-
-        </com.google.android.material.tabs.TabItem>
-
 
     </com.google.android.material.tabs.TabLayout>
 
