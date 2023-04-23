@@ -68,6 +68,8 @@ public class MainActivity extends FragmentActivity{
     static final int MESSAGE_READ = 1;
     ServerClass serverClass;
     ClientClass clientClass;
+    ServerClass serverClass2;
+    ClientClass clientClass2;
     WifiP2pInfo mWifiP2pInfo;
 
     boolean groupOwner = false;
@@ -265,15 +267,27 @@ public class MainActivity extends FragmentActivity{
             // If the connection group exists and the device is connection host
             if (wifiP2pInfo.groupFormed && wifiP2pInfo.isGroupOwner && !groupOwner) {
                 connectionStatus.setText("HOST");
-                serverClass = new ServerClass(handler);
+                serverClass = new ServerClass(handler, 8888);
                 serverClass.start();
                 groupOwner = true;
             // If only the connection group exists
-            } else if (wifiP2pInfo.groupFormed && !groupOwner) {
+            }
+            else if (wifiP2pInfo.groupFormed && !groupOwner) {
                 connectionStatus.setText("CLIENT");
-                clientClass = new ClientClass(groupOwnerAddress, handler);
+                clientClass = new ClientClass(groupOwnerAddress, handler, 8888);
                 clientClass.start();
             }
+            else if(groupOwner){
+                connectionStatus.setText("HOST");
+//                serverClass2 = new ServerClass(handler, 8889);
+//                serverClass2.start();
+            }
+            else if (wifiP2pInfo.groupFormed && connected) {
+                connectionStatus.setText("CLIENT");
+//                clientClass2 = new ClientClass(groupOwnerAddress, handler, 8889);
+//                clientClass2.start();
+            }
+
         }
     };
 

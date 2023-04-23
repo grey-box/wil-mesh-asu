@@ -12,15 +12,17 @@ public class ServerClass extends Thread{
     ServerSocket serverSocket;
     SendReceive sendReceive;
     Handler handler;
-    public ServerClass(Handler _handler){
+    int portNum;
+    public ServerClass(Handler _handler, int _portNum){
         this.handler = _handler;
+        this.portNum = _portNum;
     }
 
     @Override
     public void run() {
         try {
             // Set server socket port number
-            serverSocket = new ServerSocket(8888);
+            serverSocket = new ServerSocket(portNum);
             // accept and store socket from server socket
             socket = serverSocket.accept();
             // Create sendRecieve task to handle socket stream operations

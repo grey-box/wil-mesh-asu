@@ -14,18 +14,20 @@ public class ClientClass extends Thread{
     String hostAdd;
     SendReceive sendReceive;
     Handler handler;
+    int portNum;
     // Constructor passed the server host IpAddress
-    public ClientClass(InetAddress hostAddress, Handler _handler){
+    public ClientClass(InetAddress hostAddress, Handler _handler, int _portNum){
         hostAdd = hostAddress.getHostAddress();
         socket = new Socket();
         this.handler = _handler;
+        this.portNum = _portNum;
     }
 
     @Override
     public void run() {
         try {
             // try to connect socket to host socket port
-            socket.connect(new InetSocketAddress(hostAdd,8888), 500);
+            socket.connect(new InetSocketAddress(hostAdd,portNum), 500);
             // Create sendRecieve task to handle socket stream operations
             sendReceive = new SendReceive(socket, handler);
             // Run the sendReceive object
