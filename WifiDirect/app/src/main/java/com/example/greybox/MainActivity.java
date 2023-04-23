@@ -294,7 +294,9 @@ public class MainActivity extends FragmentActivity{
     WifiP2pManager.GroupInfoListener groupInfoListener = new WifiP2pManager.GroupInfoListener(){
         @Override
         public void onGroupInfoAvailable(WifiP2pGroup wifiP2pGroup) {
-            read_msg_box.setText("GO FOUND: "+wifiP2pGroup.getOwner());
+////////////////////////////////////////////////////////////////////////////////////////////////////
+            read_msg_box.setText("GO FOUND: "+wifiP2pGroup.getOwner().deviceAddress );
+////////////////////////////////////////////////////////////////////////////////////////////////////
         }
     };
 
