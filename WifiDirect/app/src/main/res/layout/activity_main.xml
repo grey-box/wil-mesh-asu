@@ -11,6 +11,20 @@
     tools:context=".MainActivity">
 
     <!--  Add Button for Discovering Wifi Peers -->
+
+    <!--  Add Button for Discovering Wifi Peers -->
+
+    <Button
+        android:id="@+id/groupinfo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginStart="119dp"
+        android:layout_marginTop="54dp"
+        android:text="groupinfo" />
+
     <Button
         android:id="@+id/discover"
         android:layout_width="wrap_content"

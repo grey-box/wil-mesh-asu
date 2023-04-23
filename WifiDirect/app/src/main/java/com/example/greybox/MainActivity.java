@@ -27,6 +27,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 import java.net.InetAddress;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 
 /*
@@ -36,7 +38,7 @@ import java.util.List;
  */
 public class MainActivity extends FragmentActivity{
 
-    Button btnDiscover, btnSend;
+    Button btnDiscover, btnSend, btnGroupInfo;
     ListView listView;
     TextView read_msg_box, connectionStatus;
     EditText writeMsg;
@@ -48,6 +50,10 @@ public class MainActivity extends FragmentActivity{
     WifiP2pManager mManager;
     // A P2p channel that connects the app to the WIFI p2p framework
     WifiP2pManager.Channel mChannel;
+    // After connection group stored with all devices and group owner info
+    WifiP2pGroup mGroup;
+
+    String localAddress = "";
 
     //Broadcast Receiver base class for code that receives and handles broadcast
     // intents sent by the context
@@ -95,6 +101,7 @@ public class MainActivity extends FragmentActivity{
     // initial work for creating objects from onCreate()
     private void initialWork() {
         // create layout objects
+        btnGroupInfo = findViewById(R.id.groupinfo);
         btnDiscover= findViewById(R.id.discover);
         btnSend= findViewById(R.id.sendButton);
         listView= findViewById(R.id.peerListView);
@@ -126,6 +133,23 @@ public class MainActivity extends FragmentActivity{
 
     // implemented method for app object action listeners
     private void exListener(){
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+        btnGroupInfo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Collection <WifiP2pDevice> collection = mGroup.getClientList();
+                String str = "GO: "+mGroup.getOwner().deviceAddress + "\n";
+                Iterator<WifiP2pDevice> device = collection.iterator();
+                // while loo
+                while (device.hasNext()) {
+                    str = str + device.next().deviceAddress + "\n";
+                }
+                str = str + "LOCAL: " + localAddress;
+                read_msg_box.setText(str);
+            }
+        });
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
         // Discover button to discover peers on the same network
         btnDiscover.setOnClickListener(new View.OnClickListener() {
@@ -295,7 +319,21 @@ public class MainActivity extends FragmentActivity{
         @Override
         public void onGroupInfoAvailable(WifiP2pGroup wifiP2pGroup) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-            read_msg_box.setText("GO FOUND: "+wifiP2pGroup.getOwner().deviceAddress );
+//            String str = "";
+//            Collection <WifiP2pDevice> collection = wifiP2pGroup.getClientList();
+//            String goAddress = wifiP2pGroup.getOwner().deviceAddress;
+//            Iterator<WifiP2pDevice> device = collection.iterator();
+//            str = goAddress + "\n";
+//            // while loo
+//            while (device.hasNext()) {
+//                str = str + device.next().deviceAddress + "\n";
+//            }
+//            read_msg_box.setText(str);
+            mGroup = wifiP2pGroup;
+            String str = "GO: "+ wifiP2pGroup.getOwner().deviceName+" " +wifiP2pGroup.getOwner().deviceAddress+"\n";
+            str = str + "LOCAL: " + localAddress;
+            read_msg_box.setText(str);
+//            read_msg_box.setText("GO: "+ wifiP2pGroup.getOwner() +"\n");
 ////////////////////////////////////////////////////////////////////////////////////////////////////
         }
     };
@@ -304,6 +342,7 @@ public class MainActivity extends FragmentActivity{
         @Override
         public void onDeviceInfoAvailable(@Nullable WifiP2pDevice wifiP2pDevice) {
             Toast.makeText(getApplicationContext(), "ADDRESS = "+wifiP2pDevice.deviceAddress, Toast.LENGTH_SHORT).show();
+            localAddress = wifiP2pDevice.deviceAddress;
         }
     };
 
