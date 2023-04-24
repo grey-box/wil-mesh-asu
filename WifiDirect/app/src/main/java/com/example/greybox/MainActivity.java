@@ -6,6 +6,7 @@ import androidx.fragment.app.FragmentActivity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.IntentFilter;
+import android.net.MacAddress;
 import android.net.wifi.WifiManager;
 import android.net.wifi.WpsInfo;
 import android.net.wifi.p2p.WifiP2pConfig;
@@ -26,8 +27,12 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
 
@@ -52,6 +57,7 @@ public class MainActivity extends FragmentActivity{
     WifiP2pManager.Channel mChannel;
     // After connection group stored with all devices and group owner info
     WifiP2pGroup mGroup;
+    WifiP2pInfo mWifiP2pInfo;
 
     String localAddress = "";
 
@@ -76,10 +82,7 @@ public class MainActivity extends FragmentActivity{
     ClientClass clientClass;
     ServerClass serverClass2;
     ClientClass clientClass2;
-    WifiP2pInfo mWifiP2pInfo;
-
     boolean groupOwner = false;
-
     boolean connected = false;
 
     //imported override method onCreate. Initialize the the activity.
@@ -138,15 +141,68 @@ public class MainActivity extends FragmentActivity{
         btnGroupInfo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Collection <WifiP2pDevice> collection = mGroup.getClientList();
-                String str = "GO: "+mGroup.getOwner().deviceAddress + "\n";
-                Iterator<WifiP2pDevice> device = collection.iterator();
-                // while loo
-                while (device.hasNext()) {
-                    str = str + device.next().deviceAddress + "\n";
+
+//                Collection <WifiP2pDevice> collection = mGroup.getClientList();
+//                String str = "GO: "+ mGroup.getOwner().deviceName+" " +mGroup.getOwner().deviceAddress + "\n";
+//                Iterator<WifiP2pDevice> device = collection.iterator();
+//                while (device.hasNext()) {
+//                    WifiP2pDevice client = device.next();
+//                    str = str +"CLIENT : "+client.deviceName+" "+ client.deviceAddress + "\n";
+//                }
+//                str = str + "LOCAL: " + localAddress;
+//                read_msg_box.setText(str);
+
+                final InetAddress groupOwnerAddress = mWifiP2pInfo.groupOwnerAddress;
+                if (mWifiP2pInfo.isGroupOwner){
+
+                    Collection <WifiP2pDevice> clients = mGroup.getClientList();
+                    //String str = "GO: "+ mGroup.getOwner().deviceName+" " +mGroup.getOwner().deviceAddress + "\n";
+                    String str = "";
+                    Iterator<WifiP2pDevice> device = clients.iterator();
+                    while (device.hasNext()) {
+//                        try {
+                            //InetAddress address = InetAddress.getByAddress(MacAddress.fromString(device.next().deviceAddress).toByteArray());
+                            WifiP2pDevice client = device.next();
+                            str = str + "CLIENT IP: "+ client.deviceName + " " + client.deviceAddress+ "\n";
+//                        } catch (UnknownHostException e) {
+//                            throw new RuntimeException(e);
+//                        }
+                        //InetAddress address = MacAddress.fromString(device.next().deviceAddress).getLinkLocalIpv6FromEui48Mac();
+                        //str = str + "CLIENT IP: "+ device.next().deviceName + " " + address.getHostAddress()+ "\n";
+                    }
+                    read_msg_box.setText(str);
+
+                }else {
+
+                    try {
+                        // Get all network interfaces on the device
+                        Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+                        // Loop over the interfaces to find the IP address of the device
+                        while (interfaces.hasMoreElements()) {
+                            NetworkInterface iface = interfaces.nextElement();
+                            Enumeration<InetAddress> addresses = iface.getInetAddresses();
+                            while (addresses.hasMoreElements()) {
+                                InetAddress addr = addresses.nextElement();
+                                // Check that the address is not a loopback address (e.g. 127.0.0.1)
+                                if (!addr.isLoopbackAddress()) {
+                                    read_msg_box.setText("GO IP: "+mWifiP2pInfo.groupOwnerAddress.getHostAddress()+"\nLOCAL IP: "+addr.getHostAddress());
+                                }
+                            }
+                        }
+                    } catch (SocketException e) {
+                        System.out.println("Error getting network interfaces: " + e.getMessage());
+                    }
+                    //read_msg_box.setText("GO: "+mGroup.getOwner().deviceName+" "+mWifiP2pInfo.groupOwnerAddress.getHostAddress());
                 }
-                str = str + "LOCAL: " + localAddress;
-                read_msg_box.setText(str);
+
+//                final InetAddress goAddress = mWifiP2pInfo.groupOwnerAddress;
+//                int portNumber = Math.abs(goAddress.toString().hashCode() % 65536) + 1024;
+//                serverClass = new ServerClass(handler, 8888);
+//                serverClass.start();
+//                final InetAddress groupOwnerAddress = mWifiP2pInfo.groupOwnerAddress;
+//                clientClass = new ClientClass(groupOwnerAddress, handler, 8888);
+//                clientClass.start();
+
             }
         });
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -264,7 +320,6 @@ public class MainActivity extends FragmentActivity{
                         connectionStatus.setText("GO FOUND "+device.deviceName);
                     }
                     index++;
-
                 }
                 // add all the device names to an adapter then add the adapter to the layout listview
                 ArrayAdapter<String> adapter = new ArrayAdapter<String>(getApplicationContext(),android.R.layout.simple_list_item_1,deviceNameArray);
@@ -291,15 +346,15 @@ public class MainActivity extends FragmentActivity{
             // If the connection group exists and the device is connection host
             if (wifiP2pInfo.groupFormed && wifiP2pInfo.isGroupOwner && !groupOwner) {
                 connectionStatus.setText("HOST");
-                serverClass = new ServerClass(handler, 8888);
-                serverClass.start();
+//                serverClass = new ServerClass(handler, 8888);
+//                serverClass.start();
                 groupOwner = true;
             // If only the connection group exists
             }
             else if (wifiP2pInfo.groupFormed && !groupOwner) {
                 connectionStatus.setText("CLIENT");
-                clientClass = new ClientClass(groupOwnerAddress, handler, 8888);
-                clientClass.start();
+//                clientClass = new ClientClass(groupOwnerAddress, handler, 8888);
+//                clientClass.start();
             }
             else if(groupOwner){
                 connectionStatus.setText("HOST");
@@ -341,7 +396,7 @@ public class MainActivity extends FragmentActivity{
     WifiP2pManager.DeviceInfoListener deviceInfoListener = new WifiP2pManager.DeviceInfoListener() {
         @Override
         public void onDeviceInfoAvailable(@Nullable WifiP2pDevice wifiP2pDevice) {
-            Toast.makeText(getApplicationContext(), "ADDRESS = "+wifiP2pDevice.deviceAddress, Toast.LENGTH_SHORT).show();
+            // Toast.makeText(getApplicationContext(), "ADDRESS = "+wifiP2pDevice.deviceAddress, Toast.LENGTH_SHORT).show();
             localAddress = wifiP2pDevice.deviceAddress;
         }
     };
