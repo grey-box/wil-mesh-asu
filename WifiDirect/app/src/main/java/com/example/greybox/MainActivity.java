@@ -92,10 +92,12 @@ public class MainActivity extends FragmentActivity {
     boolean connected = false;
     int groupNum = 0;
 
+    // TODO: maybe we need to put these somewhere else
     public static final int MESSAGE_READ = 1,
                             MESSAGE_WRITTEN = 2,
                             SOCKET_DISCONNECTION = 3,
                             HANDLE = 4;
+    //
     Handler uiHandler;
 
 
@@ -159,7 +161,7 @@ public class MainActivity extends FragmentActivity {
         writeMsg = findViewById(R.id.writeMsg);
 //        fileList = findViewById(R.id.fileList);   // PE_NOTE: disable temporarily since it's not used and affects the UI
 
-        // TODO: PE_CMT: Do we need an object to the wifiManager? UPDATE: after search in the code, this object is not used. Consider removing it.
+        // TODO: Do we need an object to the wifiManager? UPDATE: after search in the code, this object is not used. Consider removing it.
         // create wifi manager from the android app context system wifi services
         wifiManager= (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         // create wifi p2p manager providing the API for managing Wifi peer-to-peer connectivity
@@ -181,7 +183,7 @@ public class MainActivity extends FragmentActivity {
 
     }
 
-    // TODO: PE_CMT: change the name of this private method. This name comes from the videos, but it could
+    // TODO: change the name of this private method. This name comes from the videos, but it could
     //  be better to name it like "setListeners", "registerListeners", etc., since I don't know what the prefix
     //  "ex" means.
     // implemented method for app object action listeners
@@ -263,17 +265,13 @@ public class MainActivity extends FragmentActivity {
                     // if listener created successfully display Discovery Started
                     @Override
                     public void onSuccess() {
-                        // PE_DBG
                         Log.i(TAG, "btnDiscover.onClick WifiP2pManager.onSuccess()");
-                        //
                         connectionStatus.setText("Discovery Started");
                     }
                     // if listener NOT created successfully display Discovery Failed
                     @Override
                     public void onFailure(int i) {
-                        // PE_DBG
                         Log.i(TAG, "btnDiscover.onClick WifiP2pManager.onFailure()");
-                        //
                         connectionStatus.setText("Discovery Failed"+i);
                     }
                 });
@@ -290,11 +288,8 @@ public class MainActivity extends FragmentActivity {
                 WifiP2pConfig config = new WifiP2pConfig();
                 // Set config device address from chosen device
                 config.deviceAddress = device.deviceAddress;
-                config.wps.setup = WpsInfo.PBC;     // TODO: PE_CMT: What is this line used for? It's not in the video.
+                config.wps.setup = WpsInfo.PBC;     // TODO: What is this line used for? It's not in the video.
 
-                // TODO: PE_CMT: This logic is a bit different from the video, I wonder why. In the video it doesn't seem
-                //  to talk about Group Owners, maybe because John is trying to create a mesh instead of simple P2P between 2 devices.
-                //  NOTE: in the `else` we have the same code as in the video.
                 if (device.isGroupOwner()) {
                     Log.i(TAG, "Connecting to a GO.");
 //                    config.groupOwnerIntent = 0;
@@ -336,15 +331,10 @@ public class MainActivity extends FragmentActivity {
             }
         });
 
-        // NOTE: Almost Same code as video 8. UPDATE: New video 7 explains how to deal with
-        //  deprecated methods.
         // Send button listener to send text message between peers
         btnSend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
-                //  NOTE: in the video he doesn't use `isGroupOwner`, but a field he created to
-                //   store if the app is host or client
                 String msg = writeMsg.getText().toString();
 
                 ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -354,12 +344,10 @@ public class MainActivity extends FragmentActivity {
                         return;
                     }
 
-                    // NOTE: I think here I have to send the message with a Handler.post() since the
-                    //  sockets are in a different thread
                     if (mWifiP2pInfo.isGroupOwner) {
                         Log.i(TAG, "Server sends message: " + msg);
-                        // TODO: For now if we send anything from the GO (server) we send it to the
-                        //  first client, but I need to change it.
+                        // TODO: For now, this method sends the message to all clients connected. We
+                        //  need to implement some logic/routing algorithm
                         serverClass.write(msg.getBytes(), 0);
                     } else {
                         Log.i(TAG, "Client sends message: " + msg);
@@ -376,17 +364,11 @@ public class MainActivity extends FragmentActivity {
         // override method to find peers available
         @Override
         public void onPeersAvailable(WifiP2pDeviceList peerList) {
-            // TODO: PE_CMT: Is this the correct way to test if the list has changed?
-            //  if the peer previous peer list does not equal current peer list gotten by listener
-            //  the peers list has changed and we want to store the new list instead
-            // TODO: check if every time this listener is called, means that the peerList is different
-            //  from the
+            // TODO: check if every time this listener is called, it means that the peerList is different
+            //  from the previous one. I don't think we need to check if lists are different.
 //            Log.i(TAG, "onPeersAvailable: received peerList");
             if (!peerList.getDeviceList().equals(peers)) {
 //                Log.i(TAG, "onPeersAvailable: peerList != peers");
-                // NOTE: Do not use this Toast below for debugging. It's very intrusive, it's
-                //  displayed about 5 or 6 times each time we press the Discover button.
-//                Toast.makeText(getApplicationContext(), "Peers Changed", Toast.LENGTH_SHORT).show();
                 peers.clear();
                 peers.addAll(peerList.getDeviceList());
 
@@ -395,16 +377,11 @@ public class MainActivity extends FragmentActivity {
                 deviceArray = new WifiP2pDevice[peerList.getDeviceList().size()];   // TODO: This is not used, remove it
                 int index = 0;
                 for(WifiP2pDevice device : peerList.getDeviceList()){
-                    // TODO: PE_CMT: This is different from the video 004
                     // NOTE: maybe is not so good to modify the name here, consider a data class or
                     //  having another list which will be the "displayName" in which we will add who
                     //  is a GO
                     if (device.isGroupOwner()) {
                         deviceNameArray[index] = device.deviceName + " : (GO)";
-                        // TODO: this info can clutter the log a bit, commented out for now.
-//                        Log.i(TAG, "GO FOUND: " + device.deviceName);
-                        // TODO: This line here is not very useful, if fill up the list, it means we found devices
-//                        connectionStatus.setText("GO FOUND "+device.deviceName);
                     } else {
                         deviceNameArray[index] = device.deviceName;
                     }
@@ -437,7 +414,6 @@ public class MainActivity extends FragmentActivity {
             // Get Host Ip Address
             final InetAddress groupOwnerAddress = wifiP2pInfo.groupOwnerAddress;
 
-            /// PE
             Log.i(TAG, "wifiP2pInfo: " + wifiP2pInfo);
             Log.i(TAG, "wifiP2pInfo.isGroupOwner: " + wifiP2pInfo.isGroupOwner);
             Log.i(TAG, "wifiP2pInfo.groupOwnerAddress: " + wifiP2pInfo.groupOwnerAddress);
@@ -450,7 +426,7 @@ public class MainActivity extends FragmentActivity {
 
             final int PORT = 8888;
 
-
+            // Once the connection info is ready, create the sockets depending on the role of the device
             // Check if we are the GO or a client
             if (wifiP2pInfo.isGroupOwner) {
                 if (serverClass == null) {

@@ -55,23 +55,9 @@ public class SocketCommunication implements Runnable {
 
                 // If there is a message
                 if (bytes > 0) {
-
-                    // NOTE: I think handler.post(Runnable) and handler.obtainMessage().sendToTarget()
-                    //  have the same effect, so, it's redundant. Or at least in this case that we just
-                    //  send a message instead of doing some action (runnable)
                     // Put a message in the `MessageQueue` of the thread handled by `handler`
                     handler.obtainMessage(MainActivity.MESSAGE_READ, bytes, -1, buffer).sendToTarget();
                     Log.i("GREYBOX", "ClientSocket. Posted message.");
-
-                    // Put an task in the `MessageQueue` of the thread handled by `handler`
-//                    handler.post(() -> {
-//                        // NOTE: the methods Handler.obtainX() are like constructors, they build a
-//                        //   message but using a recycled object. This is more performant (doesn't
-//                        //   allocate memory). With the params we can set its 3 members if we need to.
-//                        //   Then we pass that message to the thread referenced by handler
-//                        handler.obtainMessage(MainActivity.MESSAGE_READ, bytes, -1, buffer).sendToTarget();
-//                        Log.i("GREYBOX", "ClientSocket. Posted message.");
-//                    });
                 }
             } catch (IOException e) {
                 Log.e(TAG, "Error while reading. Socket disconnected?");
