@@ -32,23 +32,32 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
 
         // Get the type of intent of action received by broadcast receiver
         String action = intent.getAction();
-        // check to see if Wifi state has changed meaning if the wifi has been turned off or not
+
+        // NOTE: Broadcast intent action indicating that the available peer list has changed.
         if(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION.equals(action)){
             //if wifi p2p manager is not null meaning there are peers to list
             if(mManager!=null){
                 // gets a list of current peers in p2p manager
                 mManager.requestPeers(mChannel, mActivity.peerListListener);
             }
+            // TODO: PE_CMT: https://developer.android.com/guide/topics/connectivity/wifip2p
+            //  Move this comment as part of the if below.
         // respond to new connections or disconnections (connection changed intent)
         }
+        // NOTE: Broadcast intent action indicating that the state of Wi-Fi p2p connectivity has changed.
         else if(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION.equals(action)){
             // If no manager for the connection exists then return
             if(mManager==null) { return; }
 
-            mManager.requestConnectionInfo(mChannel,mActivity.connectionInfoListener);
+            mManager.requestConnectionInfo(mChannel, mActivity.connectionInfoListener);
             /* !!!DEPRECATED!!!
                 Object for storing addition network information
              */
+            // TODO: PE_CMT: comment out this line since it's not used and it's deprecated.
+            //  Actually, it would be better to remove commented code.
+            //  These lines come directly from the video, do we need them or is it just to get some
+            //  info about the connection? If we do, we need to find the new proper way to do it. So
+            //  far it seems is useless info about a device being connected.
             NetworkInfo networkInfo = intent.getParcelableExtra(WifiP2pManager.EXTRA_NETWORK_INFO);
             /* !!!DEPRECATED!!!
                 https://developer.android.com/reference/android/net/NetworkInfo
@@ -69,9 +78,12 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
                 // Do something with the retrieved group information
                 mManager.requestGroupInfo(mChannel, mActivity.groupInfoListener);
             }
-
+        // TODO: PE_CMT: https://developer.android.com/guide/topics/connectivity/wifip2p
+        //  Move this comment as part of the if below.
         // respond to this device's wifi state changing
         }
+        // TODO: PE_CMT: https://developer.android.com/guide/topics/connectivity/wifip2p
+        //  Broadcast when a device's details have changed, such as the device's name.
         else if(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)){
             mManager.requestDeviceInfo(mChannel, mActivity.deviceInfoListener);
         }
