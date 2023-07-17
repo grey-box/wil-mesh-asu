@@ -21,6 +21,22 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
+    /// PE_AUTO_CONNECT
+    // TODO: remove when auto_connect feature is implemented
+    sourceSets {
+        main {
+            java {
+                exclude '**/DnsSdManager.java'
+            }
+        }
+//        androidTest {
+//            java {
+//                exclude '**/TestSomeExcludedClass.java'
+//            }
+//        }
+    }
+    /// PE_AUTO_CONNECT
 }
 
 dependencies {
