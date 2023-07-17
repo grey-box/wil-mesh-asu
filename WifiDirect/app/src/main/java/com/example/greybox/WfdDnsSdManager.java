@@ -1,14 +1,18 @@
 package com.example.greybox;
 
+import android.net.MacAddress;
+import android.net.wifi.p2p.WifiP2pConfig;
+import android.net.wifi.p2p.WifiP2pConfig.Builder;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.net.wifi.p2p.WifiP2pManager.ActionListener;
 import android.net.wifi.p2p.nsd.WifiP2pDnsSdServiceInfo;
 import android.net.wifi.p2p.nsd.WifiP2pDnsSdServiceRequest;
 import android.util.Log;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 
 /// PE_AUTO_CONNECT
@@ -22,8 +26,9 @@ public class WfdDnsSdManager {
     private final WifiP2pManager.Channel channel;
     private boolean isLocalServiceRegistered = false;
     private boolean isAddServiceRequestMade = false;
-    final private HashMap<String, String> names = new HashMap<>();
-    ArrayList<ConnectionData> groupOwners;
+    final private HashMap<String, ConnectionData> gosData = new HashMap<>();
+//    ArrayList<ConnectionData> groupOwners;
+//    ArrayList<HashMap<String, ConnectionData>> groupOwners;
     WifiP2pDnsSdServiceRequest serviceRequest;
 
 
@@ -34,7 +39,7 @@ public class WfdDnsSdManager {
     public WfdDnsSdManager(WifiP2pManager manager, WifiP2pManager.Channel channel) {
         this.manager = manager;
         this.channel = channel;
-        this.groupOwners = new ArrayList<>();
+//        this.groupOwners = new ArrayList<>();
     }
 
 
@@ -47,7 +52,7 @@ public class WfdDnsSdManager {
         // Add the local service, sending the service info, network channel,
         // and listener that will be used to indicate success or failure of
         // the request.
-        manager.addLocalService(channel, serviceInfo, new WifiP2pManager.ActionListener() {
+        manager.addLocalService(channel, serviceInfo, new ActionListener() {
             @Override
             public void onSuccess() {
                 // Command successful! Code isn't necessarily needed here,
@@ -71,7 +76,7 @@ public class WfdDnsSdManager {
 
         if (serviceInfo == null) { return; }
 
-        manager.removeLocalService(channel, serviceInfo, new WifiP2pManager.ActionListener() {
+        manager.removeLocalService(channel, serviceInfo, new ActionListener() {
 
             @Override
             public void onSuccess() {
@@ -109,10 +114,39 @@ public class WfdDnsSdManager {
                 Log.d(TAG, "domain: " + fullDomain);
                 Log.d(TAG, "device: \n" + device);
                 Log.d(TAG, "record: \n" + record);
-                names.put(device.deviceAddress, record.get("name"));
+                Log.d(TAG, "device.address: " + device.deviceAddress);
+
+                /// Client procedure (4.4). Step 1
+                // TODO: decrypt the data and possibly parse it
+                // Decrypting and parsing data here...
+                //
+
+                // TODO: "greybox" should be a constant defined somewhere. Maybe in WfdNetManagerService
+                // TODO: if we have many services, I don't know if this is async and we can enter here
+                //  while reading from it in `onDnsSdServiceAvailable`. So, we might end up reading
+                //  wrong data. For now, we assume there is only one service.
+                if (Objects.requireNonNull(record.get("name")).contains("greybox")) {
+                    // TODO: need to check that every key exists before creating the object?
+                    // The article recommends to store the info in a list
+                    gosData.put(device.deviceAddress,
+                            new ConnectionData(record.get("mac"),
+                            record.get("ssid"),
+                            record.get("pass"),
+                            Integer.parseInt(Objects.requireNonNull(record.get("port")))));
+
+                    // TODO: the article suggests to start a timer once we received a
+                    //
+                    //
+                }
+                //
+
+
             }
         };
 
+        // TODO: I don't know if this callback is useful in our case. The connection information is
+        //  in the TXT record. Here we don't have direct access to it in the arguments. Maybe I need
+        //  to do the same as the example
         // This receives the actual description and connection information. The service response
         // listener uses the relationship device-name created in txtRecordListener to link the DNS
         // record with the corresponding service information.
@@ -120,17 +154,17 @@ public class WfdDnsSdManager {
             @Override
             public void onDnsSdServiceAvailable(String instanceName,
                                                 String registrationType,
-                                                WifiP2pDevice resourceType) {
+                                                WifiP2pDevice deviceInfo) {
                 Log.d(TAG, "onDnsSdServiceAvailable");
-                Log.d(TAG, " instanceName:     " + instanceName);
-                Log.d(TAG, " registrationType: " + registrationType);
-                Log.d(TAG, " resourceType:     " + resourceType);
+                Log.d(TAG, " instanceName:     " + instanceName);       // service name: SERVICE_NAME (greybox_mesh)
+                Log.d(TAG, " registrationType: " + registrationType);   // service type: SERVICE_TYPE + .local. (_nsdgreybox._tcp.local.)
+                Log.d(TAG, " deviceInfo:       " + deviceInfo);         // device info (WifiP2pDevice)
 
                 // TODO: why? this is from https://developer.android.com/training/connect-devices-wirelessly/nsd-wifi-direct
                 // Update the device name with the human-friendly version from
                 // the DnsTxtRecord, assuming one arrived.
-                resourceType.deviceName = names.containsKey(resourceType.deviceAddress) ?
-                        names.get(resourceType.deviceAddress) : resourceType.deviceName;
+//                deviceInfo.deviceName = names.containsKey(deviceInfo.deviceAddress) ?
+//                        names.get(deviceInfo.deviceAddress) : deviceInfo.deviceName;
 
                 // TODO: I won't have a UI element to display this, but it could be useful as a
                 //  reference
@@ -138,18 +172,110 @@ public class WfdDnsSdManager {
 //                WiFiDirectServicesList fragment = (WiFiDirectServicesList) getFragmentManager()
 //                        .findFragmentById(R.id.frag_peerlist);
 //                WiFiDevicesAdapter adapter = ((WiFiDevicesAdapter) fragment.getListAdapter());
-//                adapter.add(resourceType);
+//                adapter.add(deviceInfo);
 //                adapter.notifyDataSetChanged();
 
-                /// Client procedure (4.4). Step 1
-                // TODO: decrypt the data and possibly parse it
-                // Decrypting and parsing data here...
-                //
-
-
-                // The article recommends to store the info in a list
-//                groupOwners.add(new ConnectionData());
                 ///
+                // Connect to the GO
+                // TODO: I think this code should be in another class. Maybe in WfdNetManagerService
+                ConnectionData connectionData = gosData.get(deviceInfo.deviceAddress);
+                if (connectionData != null) {
+                    // Builder used to build WifiP2pConfig objects for creating or joining a group.
+                    WifiP2pConfig.Builder configBuilder = new WifiP2pConfig.Builder();
+
+                    // NOTE:
+                    //  Documentation says: Builder used to build `WifiP2pConfig` objects for creating
+                    //  or joining a group. The WifiP2pConfig can be constructed for two use-cases:
+                    //   - SSID + Passphrase are known: use setNetworkName(java.lang.String) and
+                    //     setPassphrase(java.lang.String).
+                    //   - SSID or Passphrase is unknown, in such a case the MAC address must be known
+                    //     and specified using setDeviceAddress(android.net.MacAddress).
+                    //  So, broadcasting the information is useless? I don't get it. Does it make it
+                    //  insecure since `deviceInfo` contains the MAC address?
+                    //  Answer: NO, the second way says OR, so, we need to know either the SSID or
+                    //  the Passphrase, we cannot connect only using the MAC address.
+                    //   UPDATE: after testing, it seems like it's impossible to connect if we don't
+                    //   set the network name. So, maybe the documentation is wrong.
+
+                    /// Testing if it's possible to connect in different ways
+                    // NOTE: Method 1: Specifying the correct SSID and Passphrase, no MAC.
+                    //  Expected: connect devices and allow communication.
+                    //  Observed: works excellent.
+                    //  Result: Excellent. The way to go. It seems secure and works.
+                    WifiP2pConfig config = configBuilder
+                            .setNetworkName(connectionData.getSsid())
+                            .setPassphrase(connectionData.getPass())
+                            .build();
+
+                    // NOTE: Method 2: Specifying the MAC address and the SSID. Wrong passphrase.
+                    //  Expected: failure. It would be a security risk to succeed.
+                    //  Observed: For an unknown reason the framework (ActionListener) says it was
+                    //  successfully connected, but there is no group, and the app crashes when trying
+                    //  to send the message with the sendBtn.
+                    //  So, we could say it passed the test.
+                    // NOTE: Also, it's safe because we cannot use a WifiP2pConfig.Builder without
+                    //  specifying the network name and passphrase.
+//                    WifiP2pConfig config = configBuilder
+//                            .setDeviceAddress(MacAddress.fromString(connectionData.getDeviceAddress()))
+//                            .setNetworkName(connectionData.getSsid())
+//                            .setPassphrase("123456789")
+//                            .build();
+
+
+                    // NOTE: Method 3: Avoid using WifiP2pConfig.Builder (to avoid the requirement of
+                    //  SSID and Passphrase). Just pass the MAC address as in the first version of the
+                    //  prototype.
+                    //  Expected: failure. It would be a security risk to succeed.
+                    //  Observed: it requests the GO app to answer an invitation, but this displays
+                    //  a dialog.
+                    //  Result:
+                    // TODO: this type of connection might be problematic from the point of view of
+                    //  an attacker. If someone uses this type of connection, our application displays
+                    //  a dialog to accept or deny the invitation to connect. Is there a way to prevent
+                    //  this? Does it affect us?
+//                    WifiP2pConfig config = new WifiP2pConfig();
+//                    // Set config device address from chosen device
+//                    config.deviceAddress = deviceInfo.deviceAddress;
+
+                    // TODO: Move this experiments and their results to a wiki page
+                    ///
+
+                    manager.connect(channel, config, new ActionListener() {
+
+                        @Override
+                        public void onSuccess() {
+                            // TODO: I guess I can't use a `connectionData` since it will create an
+                            //  implicit reference. Need to review
+                            // TODO: I guess this would be still a security issue, so, this should be
+                            //  just for debugging/testing
+//                            Log.d(TAG, " Connected to: " + connectionData.getSsid()
+//                                    + "\n" + connectionData.getDeviceAddress());
+                            Log.d(TAG, " CONNECTED!");
+                        }
+
+                        @Override
+                        public void onFailure(int errorCode) {
+                            Log.d(TAG, "Failed to create group. Error code: " + errorCode);
+                            // TODO: is there any way to retry creation of the group if the first attempt failed?
+
+                            // TODO: this should be a function
+                            switch (errorCode) {
+                                case WifiP2pManager.P2P_UNSUPPORTED:
+                                    Log.e(TAG, " Failed because Wi-Fi Direct is not supported on the device.");
+                                    break;
+
+                                case WifiP2pManager.ERROR:
+                                    Log.e(TAG, " Failed due to an internal error.");
+                                    break;
+
+                                case WifiP2pManager.BUSY:
+                                    Log.e(TAG, " Failed due to the framework is busy and is unable to attend the request.");
+                                    break;
+                            }
+                        }
+                    });
+                }
+
             }
         };
 
@@ -173,7 +299,7 @@ public class WfdDnsSdManager {
             serviceRequest = WifiP2pDnsSdServiceRequest.newInstance();
         }
 
-        manager.addServiceRequest(channel, serviceRequest, new WifiP2pManager.ActionListener() {
+        manager.addServiceRequest(channel, serviceRequest, new ActionListener() {
             @Override
             public void onSuccess() {
                 Log.d(TAG, " addServiceRequest: Request to add services succeeded.");
@@ -203,7 +329,7 @@ public class WfdDnsSdManager {
      * specified with calls to addServiceRequest(Channel, WifiP2pServiceRequest, ActionListener).
      */
     private void requestDiscoverServices() {
-        manager.discoverServices(channel, new WifiP2pManager.ActionListener() {
+        manager.discoverServices(channel, new ActionListener() {
 
             @Override
             public void onSuccess() {

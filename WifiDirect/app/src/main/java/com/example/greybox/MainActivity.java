@@ -471,21 +471,28 @@ public class MainActivity extends FragmentActivity {
             if (wifiP2pInfo.isGroupOwner) {
                 // TODO: I think the ServerSocket needs to be created at the moment we create the softAP
                 //  since it's recommended to have a dynamic port instead of a fixed one.
+                // TODO: convert this into a singleton?
                 if (serverClass == null) {
                     // Create a ServerSocket
                     serverClass = new ServerClass(uiHandler, PORT);
                 }
 
+                // One thread to wait for each possible client
                 ExecutorService executorService = Executors.newSingleThreadExecutor();
                 Log.i(TAG, "Starting server thread");
                 executorService.execute(serverClass);
             }
             else {
-                // Create a (client) Socket
-                clientClass = new ClientClass(groupOwnerAddress, uiHandler, PORT);
-                ExecutorService executorService = Executors.newSingleThreadExecutor();
-                Log.i(TAG, "Starting client thread");
-                executorService.execute(clientClass);
+                // NOTE: I suppose we should execute this once
+                // TODO: use return instead of indenting all the code: `if (clientClass != null) return`
+                //  Or convert this into a singleton?
+                if (clientClass == null) {
+                    // Create a (client) Socket
+                    clientClass = new ClientClass(groupOwnerAddress, uiHandler, PORT);
+                    ExecutorService executorService = Executors.newSingleThreadExecutor();
+                    Log.i(TAG, "Starting client thread");
+                    executorService.execute(clientClass);
+                }
             }
         }
     };

@@ -97,11 +97,16 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
                     mActivity.wfdNetManagerService._isGO = true;
                     //
                 }
-                else {
-                    // TODO: UPDATE: clients can´t get in here since this state is only reached when
-                    //  the connection changes, like when we create a group
-                    mActivity.wfdNetManagerService.discoverServices();
-                }
+//                else {
+//                    // TODO: UPDATE: clients can´t get in here since this state is only reached when
+//                    //  the connection changes, like when we create a group
+//                    mActivity.wfdNetManagerService.discoverServices();
+//                }
+
+                // TODO: `connectionInfoListener` performs the socket connection. So either move socket
+                //  connection somewhere else or leave it as is. I already added some `if`s to execute
+                //  the creation of the threads only once
+                mManager.requestConnectionInfo(mChannel, mActivity.connectionInfoListener);
                 ///
 
                 // TODO: I think we don't need this method call in the auto-connect feature since we built

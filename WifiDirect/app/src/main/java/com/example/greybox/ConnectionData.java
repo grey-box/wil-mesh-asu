@@ -8,10 +8,21 @@ public class ConnectionData {
     private String ssid;
     private String pass;
 
-    public ConnectionData(String deviceAddress, String ssid, String pass) {
+    public int getPort() {
+        return port;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
+    }
+
+    private int port;
+
+    public ConnectionData(String deviceAddress, String ssid, String pass, int port) {
         this.deviceAddress = deviceAddress;
         this.ssid = ssid;
         this.pass = pass;
+        this.port = port;
     }
 
     public String getDeviceAddress() {

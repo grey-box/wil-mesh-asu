@@ -197,15 +197,13 @@ public class WfdNetManagerService {
         //  - The "Key" SHOULD be no more than nine characters long. This is for efficiency.
         //  - A key name is intended solely to be a machine-readable identifier, not a human-readable
         //  - Keys are case insensitive
-
         Log.d(TAG, " Creting the record.");
-        // TODO: I really don't know what is required in the record. Need to test and investigate more
-        // The article suggests to concatenate the whole info, but the  the these names are temporary
-        record.put("port", String.valueOf(SERVER_PORT));
-        record.put("name", "greybox" + (int) (Math.random() * 1000));   // TODO: I guess I need to remove the random number
+        // TODO: The article suggests to concatenate the whole info, I guess that would be more secure
+        record.put("mac", enMac);
         record.put("ssid", enSSID);
         record.put("pass", enPass);
-//        record.put("mac", enMac);
+        record.put("port", String.valueOf(SERVER_PORT));
+        record.put("name", "greybox" + (int) (Math.random() * 1000));   // TODO: I guess I need to remove the random number
 
         // Service information.  Pass it an instance name, service type `_protocol._transportlayer`,
         // and the map containing information other devices will want once they connect to this one
