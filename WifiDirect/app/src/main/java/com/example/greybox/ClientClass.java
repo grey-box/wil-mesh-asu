@@ -56,7 +56,7 @@ class ClientClass implements Runnable {
         socketComm.write(msg);
     }
 
-    private void closeSocket() {
+    public void closeSocket() {
         try {
             socket.close();
         } catch (IOException e) {

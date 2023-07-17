@@ -110,4 +110,16 @@ class ServerClass implements Runnable {
             }
         }
     }
+
+    public ServerSocket getServerSocket() { return serverSocket; }
+
+    public void closeSocket() {
+        try {
+            serverSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            Log.e(TAG, "Error while closing the server socket", e);
+//            throw new RuntimeException("Error while closing client socket");
+        }
+    }
 }

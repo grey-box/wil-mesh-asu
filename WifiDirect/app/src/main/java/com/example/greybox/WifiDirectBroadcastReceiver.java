@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.net.NetworkInfo;
 import android.net.wifi.p2p.WifiP2pGroup;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.util.Log;
 import android.widget.Toast;
 
 /*
@@ -14,6 +15,8 @@ import android.widget.Toast;
     Sarthi Technology - https://www.youtube.com/playlist?list=PLFh8wpMiEi88SIJ-PnJjDxktry4lgBtN3
  */
 public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
+    private static final String TAG = "WifiDirectBroadcastRece";
+
     //Wifi P2p Manager provides specif API for managing WIFI p2p connectivity
     private WifiP2pManager mManager;
     // A P2p channel that connects the app to the WIFI p2p framework
@@ -22,10 +25,13 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
     private MainActivity mActivity;
 
     //Constructor taking wifi p2p manager, the channel for the receiver to monitor, and the main activity
+    // TODO: I just realized that this class and MainActivity are tightly coupled because we are passing
+    //  specifically a MainActivity object. Consider refactoring this, but for now is not really important
     public WifiDirectBroadcastReceiver(WifiP2pManager mManager, WifiP2pManager.Channel mChannel, MainActivity mActivity){
         this.mManager = mManager; this.mChannel = mChannel; this.mActivity = mActivity;
     }
 
+    // https://developer.android.com/guide/topics/connectivity/wifip2p
     // onReceive receives the app context and the intent and takes necessary action depending on intent
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -34,58 +40,90 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
         String action = intent.getAction();
 
         // NOTE: Broadcast intent action indicating that the available peer list has changed.
-        if(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION.equals(action)){
+        if (WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION.equals(action)) {
+            /// PE_DBG_TMP
+//            Log.d(TAG, "*** WIFI_P2P_PEERS_CHANGED_ACTION start");
+            ///
+
             //if wifi p2p manager is not null meaning there are peers to list
-            if(mManager!=null){
+            if (mManager != null) {
                 // gets a list of current peers in p2p manager
                 mManager.requestPeers(mChannel, mActivity.peerListListener);
             }
+            Log.d(TAG, "Peer list changed.");
             // TODO: PE_CMT: https://developer.android.com/guide/topics/connectivity/wifip2p
             //  Move this comment as part of the if below.
         // respond to new connections or disconnections (connection changed intent)
+
+            /// PE_DBG_TMP
+//            Log.d(TAG, "*** WIFI_P2P_PEERS_CHANGED_ACTION end");
+            ///
         }
         // NOTE: Broadcast intent action indicating that the state of Wi-Fi p2p connectivity has changed.
-        else if(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION.equals(action)){
-            // If no manager for the connection exists then return
-            if(mManager==null) { return; }
+        else if (WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION.equals(action)) {
+            /// PE_DBG_TMP
+            Log.d(TAG, "*** WIFI_P2P_CONNECTION_CHANGED_ACTION start");
+            ///
 
-            mManager.requestConnectionInfo(mChannel, mActivity.connectionInfoListener);
-            /* !!!DEPRECATED!!!
-                Object for storing addition network information
-             */
-            // TODO: PE_CMT: comment out this line since it's not used and it's deprecated.
-            //  Actually, it would be better to remove commented code.
-            //  These lines come directly from the video, do we need them or is it just to get some
-            //  info about the connection? If we do, we need to find the new proper way to do it. So
-            //  far it seems is useless info about a device being connected.
-            NetworkInfo networkInfo = intent.getParcelableExtra(WifiP2pManager.EXTRA_NETWORK_INFO);
-            /* !!!DEPRECATED!!!
-                https://developer.android.com/reference/android/net/NetworkInfo
-                Checks if network connectivity exists and connection can be established
-             */
-//            if(networkInfo.isConnected()){
-//                mManager.requestConnectionInfo(mChannel,mActivity.connectionInfoListener);
-//            }else{
-//                mActivity.connectionStatus.setText("DEVICE DISCONNECTED");
-//            }
+            // If no manager for the connection exists then return
+            if (mManager == null) { return; }
+
+            // TODO: I think we don't need this method call in the auto-connect feature since we built
+            //  the group, so, we already have the information of the connection
+//            mManager.requestConnectionInfo(mChannel, mActivity.connectionInfoListener);
 
             WifiP2pGroup group = intent.getParcelableExtra(WifiP2pManager.EXTRA_WIFI_P2P_GROUP);
+
             if (group != null) {
                 // Use the group object to retrieve group information
-                String ownerAddress = group.getOwner().deviceAddress;
-                String ssid = group.getNetworkName();
-                String passphrase = group.getPassphrase();
+                /// PE_AUTO_CONNECT
+                Log.d(TAG, "Group found.");
+                Log.d(TAG, "isGO:      " + group.isGroupOwner());
+                Log.d(TAG, "ownerAddr: " + group.getOwner().deviceAddress); // fake info
+                Log.d(TAG, "ssid:      " + group.getNetworkName());
+                Log.d(TAG, "pass:      " + group.getPassphrase());
+
+                // Step 2
+                // TODO: these two methods calls (makeNSDBroadcast() and discoverServices()) should
+                //  be in a separate thread?
+                // TODO: I don't know if this is a horrible dependency with the MainActivity.
+                //  Maybe it's OK.
+                // If this device is a GO, broadcast its service as GO
+                if (group.isGroupOwner()) {
+                    // TODO: encrypt everything that will be broadcast for NSD (ssid, passprhase, mac)
+                    mActivity.wfdNetManagerService.makeNSDBroadcast(group.getNetworkName(),
+                            group.getPassphrase());
+                    // tmp
+                    mActivity.wfdNetManagerService._isGO = true;
+                    //
+                }
+                else {
+                    // TODO: UPDATE: clients can´t get in here since this state is only reached when
+                    //  the connection changes, like when we create a group
+                    mActivity.wfdNetManagerService.discoverServices();
+                }
+                ///
+
+                // TODO: I think we don't need this method call in the auto-connect feature since we built
+                //  the group, so, we already have the information of the connection
                 // Do something with the retrieved group information
-                mManager.requestGroupInfo(mChannel, mActivity.groupInfoListener);
+//                mManager.requestGroupInfo(mChannel, mActivity.groupInfoListener);
             }
-        // TODO: PE_CMT: https://developer.android.com/guide/topics/connectivity/wifip2p
-        //  Move this comment as part of the if below.
-        // respond to this device's wifi state changing
+
+            /// PE_DBG_TMP
+            Log.d(TAG, "*** WIFI_P2P_CONNECTION_CHANGED_ACTION end");
+            ///
         }
-        // TODO: PE_CMT: https://developer.android.com/guide/topics/connectivity/wifip2p
         //  Broadcast when a device's details have changed, such as the device's name.
-        else if(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)){
+        else if (WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)) {
+            /// PE_DBG_TMP
+            Log.d(TAG, "*** WIFI_P2P_THIS_DEVICE_CHANGED_ACTION start");
+            ///
+            // respond to this device's wifi state changing
             mManager.requestDeviceInfo(mChannel, mActivity.deviceInfoListener);
+            /// PE_DBG_TMP
+            Log.d(TAG, "*** WIFI_P2P_THIS_DEVICE_CHANGED_ACTION end");
+            ///
         }
     }
 
