@@ -6,8 +6,6 @@ import androidx.fragment.app.FragmentActivity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.IntentFilter;
-import android.net.wifi.WifiManager;
-import android.net.wifi.WpsInfo;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pDeviceList;
@@ -26,14 +24,8 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -58,8 +50,6 @@ public class MainActivity extends FragmentActivity {
     EditText writeMsg;
 //    ListView fileList;    // PE_NOTE: disable temporarily since it's not used and affects the UI
 
-    //Wifi Manager primary API for managing all aspects of WIFI connectivity
-    WifiManager wifiManager;
     //Wifi P2p Manager provides specif API for managing WIFI p2p connectivity
     WifiP2pManager mManager;
     // A P2p channel that connects the app to the WIFI p2p framework
@@ -88,7 +78,6 @@ public class MainActivity extends FragmentActivity {
     ServerClass serverClass;
     ClientClass clientClass;
 
-    boolean groupOwner = false;
     boolean connected = false;
     int groupNum = 0;
 
@@ -112,9 +101,9 @@ public class MainActivity extends FragmentActivity {
             Toast.makeText(getApplicationContext(), "WIFI DIRECT SUPPORTED", Toast.LENGTH_SHORT).show();
         }
         // creating objects
-        initialWork();
+        initialization();
         // adding listeners to the objects
-        exListener();
+        setListeners();
 
         // NOTE: the callback passed as argument contains an implicit reference to MainActivity, but
         //  I guess this case it's ok since we are in the same thread, we just receive messages
@@ -146,11 +135,8 @@ public class MainActivity extends FragmentActivity {
         });
     }
 
-    // TODO: PE_CMT: consider changing the name of this private method. This name comes from the videos, but it could
-    //  be better to name it like "initialization". We could split also the UI part (those calling "findViewById"
-    //  and the wifi stuff.
     // initial work for creating objects from onCreate()
-    private void initialWork() {
+    private void initialization() {
         // create layout objects
         btnGroupInfo = findViewById(R.id.groupinfo);
         btnDiscover= findViewById(R.id.discover);
@@ -161,9 +147,6 @@ public class MainActivity extends FragmentActivity {
         writeMsg = findViewById(R.id.writeMsg);
 //        fileList = findViewById(R.id.fileList);   // PE_NOTE: disable temporarily since it's not used and affects the UI
 
-        // TODO: Do we need an object to the wifiManager? UPDATE: after search in the code, this object is not used. Consider removing it.
-        // create wifi manager from the android app context system wifi services
-        wifiManager= (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         // create wifi p2p manager providing the API for managing Wifi peer-to-peer connectivity
         mManager = (WifiP2pManager) getApplicationContext().getSystemService(Context.WIFI_P2P_SERVICE);
         // a channel that connects the app to the wifi p2p framework.
@@ -183,13 +166,9 @@ public class MainActivity extends FragmentActivity {
 
     }
 
-    // TODO: change the name of this private method. This name comes from the videos, but it could
-    //  be better to name it like "setListeners", "registerListeners", etc., since I don't know what the prefix
-    //  "ex" means.
     // implemented method for app object action listeners
-    private void exListener(){
+    private void setListeners(){
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
         btnGroupInfo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -202,7 +181,6 @@ public class MainActivity extends FragmentActivity {
                     Toast.makeText(getApplicationContext(),"No group", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                // ///
                 if (mWifiP2pInfo.isGroupOwner){
                     str = str + "GROUP OWNER:  ME\n";
                     Collection <WifiP2pDevice> clients = mGroup.getClientList();
@@ -212,10 +190,6 @@ public class MainActivity extends FragmentActivity {
                         String macString = client.deviceAddress;
                         str = str + "CLIENT :  "+ client.deviceName + " " + macString+ "\n";
 
-                        ////////////REQUIRES API 30////////////////////
-//                        MacAddress macAddress = MacAddress.fromString(client.deviceAddress);
-//                        InetAddress ipAddress = macAddress.getLinkLocalIpv6FromEui48Mac();
-//                        str = str + "CLIENT IP: "+ client.deviceName + " " + ipAddress.toString() + "\n";
                     }
                     str = str + "GROUP NUM: " + groupNum+"\n";
                 }else {
@@ -243,17 +217,8 @@ public class MainActivity extends FragmentActivity {
                 }
                 read_msg_box.setText(str);
 
-//                final InetAddress goAddress = mWifiP2pInfo.groupOwnerAddress;
-//                int portNumber = Math.abs(goAddress.toString().hashCode() % 65536) + 1024;
-//                serverClass = new ServerClass(handler, 8888);
-//                serverClass.start();
-//                final InetAddress groupOwnerAddress = mWifiP2pInfo.groupOwnerAddress;
-//                clientClass = new ClientClass(groupOwnerAddress, handler, 8888);
-//                clientClass.start();
-
             }
         });
-////////////////////////////////////////////////////////////////////////////////////////////////////
 
         // Discover button to discover peers on the same network
         btnDiscover.setOnClickListener(new View.OnClickListener() {
@@ -288,7 +253,6 @@ public class MainActivity extends FragmentActivity {
                 WifiP2pConfig config = new WifiP2pConfig();
                 // Set config device address from chosen device
                 config.deviceAddress = device.deviceAddress;
-                config.wps.setup = WpsInfo.PBC;     // TODO: What is this line used for? It's not in the video.
 
                 if (device.isGroupOwner()) {
                     Log.i(TAG, "Connecting to a GO.");
@@ -374,7 +338,7 @@ public class MainActivity extends FragmentActivity {
 
                 //store peers list device names to be display and add to device array to be selected
                 deviceNameArray = new String[peerList.getDeviceList().size()];
-                deviceArray = new WifiP2pDevice[peerList.getDeviceList().size()];   // TODO: This is not used, remove it
+                deviceArray = new WifiP2pDevice[peerList.getDeviceList().size()];
                 int index = 0;
                 for(WifiP2pDevice device : peerList.getDeviceList()){
                     // NOTE: maybe is not so good to modify the name here, consider a data class or
@@ -386,7 +350,7 @@ public class MainActivity extends FragmentActivity {
                         deviceNameArray[index] = device.deviceName;
                     }
 
-                    deviceArray[index] = device;    // TODO: This is not used, remove it
+                    deviceArray[index] = device;
                     index++;
                 }
                 // TODO: RecyclerView is now preferred instead of ListView. Anyway, this is just a
@@ -451,7 +415,6 @@ public class MainActivity extends FragmentActivity {
     WifiP2pManager.GroupInfoListener groupInfoListener = new WifiP2pManager.GroupInfoListener(){
         @Override
         public void onGroupInfoAvailable(WifiP2pGroup wifiP2pGroup) {
-////////////////////////////////////////////////////////////////////////////////////////////////////
             mGroup = wifiP2pGroup;
             Collection <WifiP2pDevice> collection = wifiP2pGroup.getClientList();
             groupNum = collection.size();
@@ -463,7 +426,6 @@ public class MainActivity extends FragmentActivity {
                 str = "GROUP OWNER:  "+ wifiP2pGroup.getOwner().deviceName+"  " +wifiP2pGroup.getOwner().deviceAddress+"\n";
             }
             read_msg_box.setText(str);
-////////////////////////////////////////////////////////////////////////////////////////////////////
         }
     };
 

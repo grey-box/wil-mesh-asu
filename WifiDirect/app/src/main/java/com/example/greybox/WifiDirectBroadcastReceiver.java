@@ -3,10 +3,8 @@ package com.example.greybox;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.net.NetworkInfo;
 import android.net.wifi.p2p.WifiP2pGroup;
 import android.net.wifi.p2p.WifiP2pManager;
-import android.widget.Toast;
 
 /*
     JSGARVEY 03/03/23 - US#206 Citations:
@@ -50,24 +48,6 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
             if(mManager==null) { return; }
 
             mManager.requestConnectionInfo(mChannel, mActivity.connectionInfoListener);
-            /* !!!DEPRECATED!!!
-                Object for storing addition network information
-             */
-            // TODO: PE_CMT: comment out this line since it's not used and it's deprecated.
-            //  Actually, it would be better to remove commented code.
-            //  These lines come directly from the video, do we need them or is it just to get some
-            //  info about the connection? If we do, we need to find the new proper way to do it. So
-            //  far it seems is useless info about a device being connected.
-            NetworkInfo networkInfo = intent.getParcelableExtra(WifiP2pManager.EXTRA_NETWORK_INFO);
-            /* !!!DEPRECATED!!!
-                https://developer.android.com/reference/android/net/NetworkInfo
-                Checks if network connectivity exists and connection can be established
-             */
-//            if(networkInfo.isConnected()){
-//                mManager.requestConnectionInfo(mChannel,mActivity.connectionInfoListener);
-//            }else{
-//                mActivity.connectionStatus.setText("DEVICE DISCONNECTED");
-//            }
 
             WifiP2pGroup group = intent.getParcelableExtra(WifiP2pManager.EXTRA_WIFI_P2P_GROUP);
             if (group != null) {
