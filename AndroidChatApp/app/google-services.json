@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "514166477543",
+    "project_id": "greybox-chat-app",
+    "storage_bucket": "greybox-chat-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:514166477543:android:6fb0a59d0751e9e1e94842",
+        "android_client_info": {
+          "package_name": "com.example.mychatapptutorial"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "514166477543-iq3gpfuvboa6qlkj2nuqfd59p1ldum0u.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD5sja4aGlgff45kTv-kHxDK9te3cemQvc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "514166477543-iq3gpfuvboa6qlkj2nuqfd59p1ldum0u.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="deploymentTargetDropDown">
+    <runningDeviceTargetSelectedWithDropDown>
+      <Target>
+        <type value="RUNNING_DEVICE_TARGET" />
+        <deviceKey>
+          <Key>
+            <type value="VIRTUAL_DEVICE_PATH" />
+            <value value="C:\Users\johng\.android\avd\Android_TV_720p_API_29.avd" />
+          </Key>
+        </deviceKey>
+      </Target>
+    </runningDeviceTargetSelectedWithDropDown>
+    <targetSelectedWithDropDown>
+      <Target>
+        <type value="QUICK_BOOT_TARGET" />
+        <deviceKey>
+          <Key>
+            <type value="VIRTUAL_DEVICE_PATH" />
+            <value value="C:\Users\curop\.android\avd\Pixel_2.avd" />
+          </Key>
+        </deviceKey>
+      </Target>
+    </targetSelectedWithDropDown>
+<<<<<<< HEAD:AndroidChatApp/.idea/deploymentTargetDropDown.xml
+    <timeTargetWasSelectedWithDropDown value="2023-04-09T03:14:19.146972Z" />
+=======
+    <timeTargetWasSelectedWithDropDown value="2023-03-19T07:31:32.362518500Z" />
+>>>>>>> a26d16a64c609e31c180d4594bc88ca293473354:US#206/.idea/deploymentTargetDropDown.xml
+  </component>
+</project>

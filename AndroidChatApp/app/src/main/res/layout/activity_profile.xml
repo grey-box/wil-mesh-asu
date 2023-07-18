@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    tools:context=".ProfileActivity">
+
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbarofviewprofile"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:layout_marginTop="0dp"
+        android:background="#505A59">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical">
+
+            <ImageButton
+                android:id="@+id/backbuttonofviewprofile"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_centerVertical="true"
+                android:background="@android:color/transparent"
+                android:src="@drawable/ic_baseline_arrow_back_24"
+                android:tint="@color/white">
+
+            </ImageButton>
+
+
+            <TextView
+                android:id="@+id/myapptext"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginLeft="10dp"
+                android:layout_toRightOf="@id/backbuttonofviewprofile"
+                android:text="Your Profile"
+                android:textColor="@color/white"
+                android:textSize="20sp"
+                android:textStyle="bold">
+
+            </TextView>
+
+
+        </RelativeLayout>
+
+
+    </androidx.appcompat.widget.Toolbar>
+
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="130dp"
+        android:layout_height="130dp"
+        android:layout_above="@+id/viewusername"
+        android:layout_marginBottom="20dp"
+        android:layout_marginLeft="80dp"
+        android:id="@+id/viewuserimage"
+        android:layout_centerHorizontal="true"
+        app:cardCornerRadius="130dp">
+
+
+        <ImageView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/defaultprofile"
+            android:id="@+id/viewuserimageinimageview"
+            android:scaleType="centerCrop">
+
+        </ImageView>
+
+
+
+    </androidx.cardview.widget.CardView>
+
+
+
+    <ImageView
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:id="@+id/logoofviewprofile"
+        android:src="@drawable/ic_baseline_person_24"
+        android:layout_alignLeft="@id/viewusername"
+        android:layout_marginLeft="-60dp"
+        app:tint="#716e6e"
+        android:layout_centerInParent="true"/>
+
+
+    <EditText
+        android:id="@+id/viewusername"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_centerInParent="true"
+        android:layout_marginLeft="90dp"
+        android:layout_marginRight="90dp"
+        android:clickable="false"
+        android:enabled="false"
+        android:hint="Enter Your Name Here"
+        android:inputType="textCapWords"
+        android:textColor="#433F3F">
+
+    </EditText>
+
+    <TextView
+        android:id="@+id/movetoupdateprofile"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/viewusername"
+        android:layout_centerInParent="true"
+        android:layout_marginTop="50dp"
+        android:paddingLeft="20dp"
+        android:paddingTop="10dp"
+        android:paddingRight="20dp"
+        android:paddingBottom="10dp"
+        android:text="[  Click Here to Update Profile  ]"
+        android:textColor="#303030">
+
+    </TextView>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</RelativeLayout>
