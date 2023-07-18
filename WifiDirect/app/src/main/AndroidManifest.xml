@@ -1,22 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+
     <!-- Adding wifi network permissions -->
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>;
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>;
-    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>;
-    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE"/>;
-    <uses-permission android:name="android.permission.INTERNET"/>;
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>;
-    <uses-permission android:name="android.permission.ACCESS_COURSE_LOCATION"/>;
+    <!--  TODO: PE_FIX: There are some warnings in this section:
+           1. ACCESS_COURSE_LOCATION should be ACCESS_COARSE_LOCATION
+           2. The semicolons at the end produce warnings -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+
     <uses-feature android:name="android.hardware.wifi.direct" android:required="true"/>
 
-    <uses-feature
-        android:name="android.hardware.touchscreen"
-        android:required="false" />
-    <uses-feature
-        android:name="android.software.leanback"
-        android:required="true" />
+    <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
+
+    <!--    PE_NOTE: removed the required="true" because we want to support tablets and phones -->
+    <uses-feature android:name="android.software.leanback" android:required="false" />
+
+    <!--  TODO: PE_FIX: The "uses-feature" below was added to suppress a warning for ACCESS_FINE_LOCATION above -->
+    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
 
     <application
         android:allowBackup="true"
@@ -27,15 +33,11 @@
         <activity
             android:name=".MainActivity"
             android:banner="@drawable/logo_greybox"
-            android:exported="true"
-            android:icon="@drawable/logo_greybox"
-            android:label="@string/app_name"
-            android:logo="@drawable/logo_greybox"
-            android:screenOrientation="landscape">
+            android:exported="true" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+<!--                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />-->
+                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
     </application>

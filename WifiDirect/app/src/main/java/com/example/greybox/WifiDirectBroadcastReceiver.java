@@ -3,10 +3,8 @@ package com.example.greybox;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.net.NetworkInfo;
 import android.net.wifi.p2p.WifiP2pGroup;
 import android.net.wifi.p2p.WifiP2pManager;
-import android.widget.Toast;
 
 /*
     JSGARVEY 03/03/23 - US#206 Citations:
@@ -32,33 +30,24 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
 
         // Get the type of intent of action received by broadcast receiver
         String action = intent.getAction();
-        // check to see if Wifi state has changed meaning if the wifi has been turned off or not
+
+        // NOTE: Broadcast intent action indicating that the available peer list has changed.
         if(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION.equals(action)){
             //if wifi p2p manager is not null meaning there are peers to list
             if(mManager!=null){
                 // gets a list of current peers in p2p manager
                 mManager.requestPeers(mChannel, mActivity.peerListListener);
             }
+            // TODO: PE_CMT: https://developer.android.com/guide/topics/connectivity/wifip2p
+            //  Move this comment as part of the if below.
         // respond to new connections or disconnections (connection changed intent)
         }
+        // NOTE: Broadcast intent action indicating that the state of Wi-Fi p2p connectivity has changed.
         else if(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION.equals(action)){
             // If no manager for the connection exists then return
             if(mManager==null) { return; }
 
-            mManager.requestConnectionInfo(mChannel,mActivity.connectionInfoListener);
-            /* !!!DEPRECATED!!!
-                Object for storing addition network information
-             */
-            NetworkInfo networkInfo = intent.getParcelableExtra(WifiP2pManager.EXTRA_NETWORK_INFO);
-            /* !!!DEPRECATED!!!
-                https://developer.android.com/reference/android/net/NetworkInfo
-                Checks if network connectivity exists and connection can be established
-             */
-//            if(networkInfo.isConnected()){
-//                mManager.requestConnectionInfo(mChannel,mActivity.connectionInfoListener);
-//            }else{
-//                mActivity.connectionStatus.setText("DEVICE DISCONNECTED");
-//            }
+            mManager.requestConnectionInfo(mChannel, mActivity.connectionInfoListener);
 
             WifiP2pGroup group = intent.getParcelableExtra(WifiP2pManager.EXTRA_WIFI_P2P_GROUP);
             if (group != null) {
@@ -69,9 +58,12 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
                 // Do something with the retrieved group information
                 mManager.requestGroupInfo(mChannel, mActivity.groupInfoListener);
             }
-
+        // TODO: PE_CMT: https://developer.android.com/guide/topics/connectivity/wifip2p
+        //  Move this comment as part of the if below.
         // respond to this device's wifi state changing
         }
+        // TODO: PE_CMT: https://developer.android.com/guide/topics/connectivity/wifip2p
+        //  Broadcast when a device's details have changed, such as the device's name.
         else if(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)){
             mManager.requestDeviceInfo(mChannel, mActivity.deviceInfoListener);
         }
