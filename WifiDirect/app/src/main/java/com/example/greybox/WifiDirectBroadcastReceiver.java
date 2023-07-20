@@ -3,11 +3,8 @@ package com.example.greybox;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.net.NetworkInfo;
 import android.net.wifi.p2p.WifiP2pGroup;
 import android.net.wifi.p2p.WifiP2pManager;
-import android.util.Log;
-import android.widget.Toast;
 
 /*
     JSGARVEY 03/03/23 - US#206 Citations:
@@ -114,6 +111,7 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
             Log.d(TAG, "*** WIFI_P2P_CONNECTION_CHANGED_ACTION end");
             ///
         }
+        // TODO: PE_CMT: https://developer.android.com/guide/topics/connectivity/wifip2p
         //  Broadcast when a device's details have changed, such as the device's name.
         else if (WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)) {
             /// PE_DBG_TMP
