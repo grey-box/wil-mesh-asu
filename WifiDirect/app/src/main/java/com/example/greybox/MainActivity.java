@@ -149,7 +149,7 @@ public class MainActivity extends FragmentActivity {
         // TODO: need a better way to create the group only if the device is a UNI device.
         // TODO: determine if only UNI devices will be Group Owners, so far, the answer is YES.
         Log.d(TAG, "Creating ManagerService OBJECT");
-        wfdNetManagerService = new WfdNetManagerService(mManager, mChannel, this);
+        wfdNetManagerService = new WfdNetManagerService(mManager, mChannel);
 
         if (Build.MODEL.equals("MBOX")) {
             Log.d(TAG, "Creating SoftAP");

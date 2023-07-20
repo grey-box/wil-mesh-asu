@@ -3,9 +3,6 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Adding wifi network permissions -->
-    <!--  TODO: PE_FIX: There are some warnings in this section:
-           1. ACCESS_COURSE_LOCATION should be ACCESS_COARSE_LOCATION
-           2. The semicolons at the end produce warnings -->
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE"/>
@@ -21,7 +18,7 @@
     <!--    PE_NOTE: removed the required="true" because we want to support tablets and phones -->
     <uses-feature android:name="android.software.leanback" android:required="false" />
 
-    <!--  TODO: PE_FIX: The "uses-feature" below was added to suppress a warning for ACCESS_FINE_LOCATION above -->
+    <!--  The "uses-feature" below was added to suppress a warning for ACCESS_FINE_LOCATION above -->
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
 
     <application

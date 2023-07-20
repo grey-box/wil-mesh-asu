@@ -20,7 +20,6 @@ public class WfdNetManagerService {
     private int creationRetriesLeft = 3;
     private final WifiP2pManager manager;
     private final WifiP2pManager.Channel channel;
-    private final MainActivity activity;    // TODO: maybe remove it
     public String encryptedSSID;    // TODO: encrypted SSID. Maybe change to private with getter/setter
     public String encryptedPass;    // TODO: encrypted PASS. Maybe change to private with getter/setter
     final String SSID = "DIRECT-Gb";  // TODO: modify and verify if it's the same or the system adds more info
@@ -41,17 +40,11 @@ public class WfdNetManagerService {
     //  contradict the instructions to open the ServerSocket at the end of initialization
     final int SERVER_PORT = 8888;
 
+    // https://www.notion.so/grey-box/Findings-journal-d3c584f59f3544e0bb02ebb91d3b3e59?pvs=4#d8559b89c0ac47849f6126258394c528
     // The name is subject to change based on conflicts with other services advertised on the same network.
     // NOTE: does this mean that we could have a problem if we expect a fixed name? Check if we ever
     //  use the service name other than for registration.
     final String SERVICE_NAME = "greybox_mesh";
-
-    //
-    // NOTE: UPDATE. Do not add a dot at the end. The service is never found when a dot is at the end.
-    //  In the video is "_myapp.tcp.". Check if this is a problem since there is a StackOverflow
-    //  question about something similar
-    //  https://www.youtube.com/watch?v=oi_ARV_I8Dc, time 4:41
-    //  https://stackoverflow.com/questions/53510192/android-nsd-why-service-type-dont-match
     final String SERVICE_TYPE = "_nsdgreybox._tcp"; // The service type uniquely identifies the service your device is advertising
     WifiP2pDnsSdServiceInfo dnsSdServiceInfo;
 
@@ -62,15 +55,12 @@ public class WfdNetManagerService {
     // TODO: think if this class should manage also the WifiP2pManager instance, opening of the channel,
     //  and so on
 
-    // TODO: I just realized that this class and MainActivity are tightly coupled because we are passing
-    //  specifically a MainActivity object. Consider refactoring this, but for now is not really important
-    WfdNetManagerService(WifiP2pManager manager, WifiP2pManager.Channel channel, MainActivity activity) {
+
+    WfdNetManagerService(WifiP2pManager manager, WifiP2pManager.Channel channel) {
         this.manager = manager;
         this.channel = channel;
-        this.activity = activity;
 
         wfdDnsSdManager = new WfdDnsSdManager(manager, channel);
-
     }
 
 
@@ -193,11 +183,8 @@ public class WfdNetManagerService {
         String enMac = deviceMacAddress;
         //
 
-        // TODO: Move all this to a wiki and include also the reference for further details
-        //  - The "Key" SHOULD be no more than nine characters long. This is for efficiency.
-        //  - A key name is intended solely to be a machine-readable identifier, not a human-readable
-        //  - Keys are case insensitive
         Log.d(TAG, " Creting the record.");
+
         // TODO: The article suggests to concatenate the whole info, I guess that would be more secure
         record.put("mac", enMac);
         record.put("ssid", enSSID);
@@ -253,7 +240,8 @@ public class WfdNetManagerService {
     // ---------------------------------------------------------------------------------------------
     //  Listeners (as attributes)
     // ---------------------------------------------------------------------------------------------
-    // TODO: determine if the listener should be an action in this class or in MainActivity
+    // TODO: determine if the listener should be an action in this class or in MainActivity. If so,
+    //  we would need an instance of MainActivity.
     WifiP2pManager.ActionListener createGroupListener = new WifiP2pManager.ActionListener() {
 
         @Override
