@@ -183,62 +183,13 @@ public class WfdDnsSdManager {
                     // Builder used to build WifiP2pConfig objects for creating or joining a group.
                     WifiP2pConfig.Builder configBuilder = new WifiP2pConfig.Builder();
 
-                    // NOTE:
-                    //  Documentation says: Builder used to build `WifiP2pConfig` objects for creating
-                    //  or joining a group. The WifiP2pConfig can be constructed for two use-cases:
-                    //   - SSID + Passphrase are known: use setNetworkName(java.lang.String) and
-                    //     setPassphrase(java.lang.String).
-                    //   - SSID or Passphrase is unknown, in such a case the MAC address must be known
-                    //     and specified using setDeviceAddress(android.net.MacAddress).
-                    //  So, broadcasting the information is useless? I don't get it. Does it make it
-                    //  insecure since `deviceInfo` contains the MAC address?
-                    //  Answer: NO, the second way says OR, so, we need to know either the SSID or
-                    //  the Passphrase, we cannot connect only using the MAC address.
-                    //   UPDATE: after testing, it seems like it's impossible to connect if we don't
-                    //   set the network name. So, maybe the documentation is wrong.
+                    Log.d(TAG, "ConnectionData.getSsid(): " + connectionData.getSsid());
+                    Log.d(TAG, "ConnectionData.getPass(): " + connectionData.getPass());
 
-                    /// Testing if it's possible to connect in different ways
-                    // NOTE: Method 1: Specifying the correct SSID and Passphrase, no MAC.
-                    //  Expected: connect devices and allow communication.
-                    //  Observed: works excellent.
-                    //  Result: Excellent. The way to go. It seems secure and works.
                     WifiP2pConfig config = configBuilder
                             .setNetworkName(connectionData.getSsid())
                             .setPassphrase(connectionData.getPass())
                             .build();
-
-                    // NOTE: Method 2: Specifying the MAC address and the SSID. Wrong passphrase.
-                    //  Expected: failure. It would be a security risk to succeed.
-                    //  Observed: For an unknown reason the framework (ActionListener) says it was
-                    //  successfully connected, but there is no group, and the app crashes when trying
-                    //  to send the message with the sendBtn.
-                    //  So, we could say it passed the test.
-                    // NOTE: Also, it's safe because we cannot use a WifiP2pConfig.Builder without
-                    //  specifying the network name and passphrase.
-//                    WifiP2pConfig config = configBuilder
-//                            .setDeviceAddress(MacAddress.fromString(connectionData.getDeviceAddress()))
-//                            .setNetworkName(connectionData.getSsid())
-//                            .setPassphrase("123456789")
-//                            .build();
-
-
-                    // NOTE: Method 3: Avoid using WifiP2pConfig.Builder (to avoid the requirement of
-                    //  SSID and Passphrase). Just pass the MAC address as in the first version of the
-                    //  prototype.
-                    //  Expected: failure. It would be a security risk to succeed.
-                    //  Observed: it requests the GO app to answer an invitation, but this displays
-                    //  a dialog.
-                    //  Result:
-                    // TODO: this type of connection might be problematic from the point of view of
-                    //  an attacker. If someone uses this type of connection, our application displays
-                    //  a dialog to accept or deny the invitation to connect. Is there a way to prevent
-                    //  this? Does it affect us?
-//                    WifiP2pConfig config = new WifiP2pConfig();
-//                    // Set config device address from chosen device
-//                    config.deviceAddress = deviceInfo.deviceAddress;
-
-                    // TODO: Move this experiments and their results to a wiki page
-                    ///
 
                     manager.connect(channel, config, new ActionListener() {
 

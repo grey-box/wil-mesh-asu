@@ -62,19 +62,7 @@ public class SocketCommunication implements Runnable {
             } catch (IOException e) {
                 Log.e(TAG, "Error while reading. Socket disconnected?");
                 e.printStackTrace();
-                // TODO: investigate why we keep logging even after closing the app. Does the socket
-                //  survive after the app was killed?
-//                    02:12:29.137  W  java.net.SocketException: Connection reset
-//                    02:12:29.137  W  	at java.net.SocketInputStream.read(SocketInputStream.java:156)
-//                    02:12:29.137  W  	at java.net.SocketInputStream.read(SocketInputStream.java:143)
-//                    02:12:29.137  W  	at java.net.SocketInputStream.read(SocketInputStream.java:129)
-//                    02:12:29.137  W  	at com.example.greybox.ClientClass.lambda$run$1$com-example-greybox-ClientClass(ClientClass.java:88)
-//                    02:12:29.137  W  	at com.example.greybox.ClientClass$$ExternalSyntheticLambda1.run(Unknown Source:2)
-//                    02:12:29.137  W  	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1137)
-//                    02:12:29.137  W  	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:637)
-//                    02:12:29.137  W  	at java.lang.Thread.run(Thread.java:1012)
                 // Build and pass a message to indicate to other thread that we disconnected.
-                // Hopefully this will get rid of the warnings
                 handler.obtainMessage(MainActivity.SOCKET_DISCONNECTION, this).sendToTarget();
 //                throw new RuntimeException("Error while reading.");
             }
