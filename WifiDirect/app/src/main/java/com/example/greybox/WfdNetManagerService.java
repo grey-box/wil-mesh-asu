@@ -256,25 +256,12 @@ public class WfdNetManagerService {
         @Override
         public void onFailure(int errorCode) {
             Log.d(TAG, "Failed to create group. Error code: " + errorCode);
+            WfdErrorInterpreter.logError(errorCode);
+
             // TODO: is there any way to retry creation of the group if the first attempt failed?
-
-            // TODO: this should be a function
-            switch (errorCode) {
-                case WifiP2pManager.P2P_UNSUPPORTED:
-                    Log.e(TAG, " Failed because Wi-Fi Direct is not supported on the device.");
-                    break;
-
-                case WifiP2pManager.ERROR:
-                    Log.e(TAG, " Failed due to an internal error.");
-                    break;
-
-                case WifiP2pManager.BUSY:
-                    Log.e(TAG, " Failed due to the framework is busy and is unable to attend the request.");
-                    Log.d(TAG, "Retrying...");
-                    if (creationRetriesLeft > 0) {
-                        createSoftAP();
-                    }
-                    break;
+            if ((errorCode == WifiP2pManager.BUSY) && creationRetriesLeft > 0) {
+                Log.d(TAG, "Retrying...");
+                createSoftAP();
             }
         }
     };
