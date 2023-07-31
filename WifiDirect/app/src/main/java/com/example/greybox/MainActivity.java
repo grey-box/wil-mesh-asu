@@ -173,7 +173,7 @@ public class MainActivity extends FragmentActivity {
     }
 
     /**
-     JSGARVEY - method for retrieving local device MAC Address
+     JSGARVEY - Method for retrieving local device MAC Address
      Sourse - <a href="https://stackoverflow.com/questions/11705906/programmatically-getting-the-mac-of-an-android-device">...</a>
      */
     public static String getMacAddr() {
