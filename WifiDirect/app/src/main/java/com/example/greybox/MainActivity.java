@@ -30,6 +30,7 @@ import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
@@ -164,11 +165,50 @@ public class MainActivity extends FragmentActivity {
         // indicates this device's configuration details have changed
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
+        // jsgarvey - disp local mac address
+        String str = "";
+        String MAC_ADDRESS = getMacAddr();
+        str = str + "MAC : " + MAC_ADDRESS + "\n" ;
+        read_msg_box.setText(str);
+    }
+
+    /**
+     JSGARVEY - method for retrieving local device MAC Address
+     Sourse - <a href="https://stackoverflow.com/questions/11705906/programmatically-getting-the-mac-of-an-android-device">...</a>
+     */
+    public static String getMacAddr() {
+        try {
+            List<NetworkInterface> all = Collections.list(NetworkInterface.getNetworkInterfaces());
+            for (NetworkInterface nif : all) {
+                if (!nif.getName().equalsIgnoreCase("wlan0")) continue;
+
+                byte[] macBytes = nif.getHardwareAddress();
+                if (macBytes == null) {
+                    return "";
+                }
+
+                StringBuilder res1 = new StringBuilder();
+                for (byte b : macBytes) {
+                    res1.append(String.format("%02X:",b));
+                }
+
+                if (res1.length() > 0) {
+                    res1.deleteCharAt(res1.length() - 1);
+                }
+                return res1.toString();
+            }
+        } catch (Exception ex) {
+            // Empty Catch
+        }
+        return "02:00:00:00:00:00";
     }
 
     // implemented method for app object action listeners
     private void setListeners(){
 
+        /**
+         *  jsgarvey - Needs Updating for MAC Address
+         */
         btnGroupInfo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -419,11 +459,16 @@ public class MainActivity extends FragmentActivity {
             Collection <WifiP2pDevice> collection = wifiP2pGroup.getClientList();
             groupNum = collection.size();
             String str = "";
+            // jsgarvey - disp local mac address
+            String MAC_ADDRESS = getMacAddr();
+            str = str + "MAC : " + MAC_ADDRESS + "\n" ;
+
             if(wifiP2pGroup.isGroupOwner()){
                 str = str + "GROUP OWNER:  ME\n";
                 str = str + "GROUP NUM: " + groupNum+"\n";
             } else{
-                str = "GROUP OWNER:  "+ wifiP2pGroup.getOwner().deviceName+"  " +wifiP2pGroup.getOwner().deviceAddress+"\n";
+                // jsgarvey - disp group owners name and mac address
+                str = str + "GROUP OWNER:  " + wifiP2pGroup.getOwner().deviceName+"  " +wifiP2pGroup.getOwner().deviceAddress+"\n";
             }
             read_msg_box.setText(str);
         }
