@@ -1,14 +1,11 @@
 package com.example.greybox;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.fragment.app.FragmentActivity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.IntentFilter;
-import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
-import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pGroup;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
@@ -16,6 +13,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.StrictMode;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -25,19 +23,22 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import java.net.InetAddress;
 import java.net.NetworkInterface;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.net.SocketException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import com.example.greybox.meshmessage.MeshMessage;
+import com.example.greybox.meshmessage.MeshMessageType;
+import com.example.greybox.netservice.MClientService;
+import com.example.greybox.netservice.MRouterService;
+import com.example.greybox.netservice.NetService;
 
 /*
     JSGARVEY 03/03/23 - US#206 Citations:
@@ -51,7 +52,6 @@ public class MainActivity extends FragmentActivity {
     ListView listView;
     TextView read_msg_box, connectionStatus;
     EditText writeMsg;
-//    ListView fileList;    // PE_NOTE: disable temporarily since it's not used and affects the UI
 
     //Wifi P2p Manager provides specif API for managing WIFI p2p connectivity
     WifiP2pManager mManager;
@@ -61,8 +61,6 @@ public class MainActivity extends FragmentActivity {
     WifiP2pGroup mGroup;
     WifiP2pInfo mWifiP2pInfo;
 
-    String localAddress = "";
-
     //Broadcast Receiver base class for code that receives and handles broadcast
     // intents sent by the context
     BroadcastReceiver mReceiver;
@@ -71,36 +69,36 @@ public class MainActivity extends FragmentActivity {
     // Filters by characteristics of intents Actions, Data, and Categories
     IntentFilter mIntentFilter;
 
-    // wifi p2p peers list
-    List<WifiP2pDevice> peers = new ArrayList<WifiP2pDevice>();
-    // array holding names of devices
-    String[] deviceNameArray;
-    // the p2p peer array will be used to connect to a device
-    WifiP2pDevice[] deviceArray;
-
-    ServerClass serverClass;
-    ClientClass clientClass;
-
-    boolean connected = false;
-    int groupNum = 0;
+    private NetService mNetService;
 
     /// PE_AUTO_CONNECT
     WfdNetManagerService wfdNetManagerService;
-    WfdDnsSdManager wfdDnsSdService;
     ///
-
-    // TODO: maybe we need to put these somewhere else
-    public static final int MESSAGE_READ = 1,
-                            MESSAGE_WRITTEN = 2,
-                            SOCKET_DISCONNECTION = 3,
-                            HANDLE = 4;
-    //
     Handler uiHandler;
+    /// PE_MSG_SPECIFIC_CLIENTS
+    private MeshDevice msgDstDevice = new MeshDevice("", "");        // Destination device of the message
+    private ArrayList<MeshDevice> groupClientsList = new ArrayList<>();  // List of the connected devices in the group. Used to get the MAC address
+    private String[] groupClientsNames;     // List of devices names to be displayed on the UI
+    private String myMacAddress = "";
+    ///
 
 
     //imported override method onCreate. Initialize the the activity.
+    //
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        /// This setup is to provide more information about some problems. It should be used only for debug
+        //  https://stackoverflow.com/questions/56911580/w-system-a-resource-failed-to-call-release
+        //  https://developer.android.com/reference/android/os/StrictMode.html
+//        StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
+//                .detectLeakedClosableObjects()
+//                .penaltyLog()
+//                .build());
+//        StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
+//                .detectLeakedClosableObjects()
+//                .penaltyLog()
+//                .build());
+        ///
         super.onCreate(savedInstanceState);
         // call a the layout resource defining the UI
         setContentView(R.layout.activity_main);
@@ -113,50 +111,8 @@ public class MainActivity extends FragmentActivity {
         // adding listeners to the objects
         setListeners();
 
-        // NOTE: the callback passed as argument contains an implicit reference to MainActivity, but
-        //  I guess this case it's ok since we are in the same thread, we just receive messages
-        //  from other threads.
-        uiHandler = new Handler(getMainLooper(), new Handler.Callback() {
-            @Override
-            public boolean handleMessage(@NonNull Message message) {
-                switch (message.what) {
-                    case MESSAGE_READ:
-                        // This message requests display in the UI the data received from another
-                        // device
-                        // The object received is a bytes[] object
-                        String text = new String((byte[])message.obj, StandardCharsets.UTF_8);
-                        Log.i(TAG, "Displaying the message on UI.");
-                        read_msg_box.setText(text);
-                        return true;
-
-                    case MESSAGE_WRITTEN:
-                        return true;
-
-                    case SOCKET_DISCONNECTION:
-                        return true;
-
-                    default:
-                        return false;
-                }
-
-            }
-        });
-
         /// PE_AUTO_CONNECT
-        // TODO: need a better way to create the group only if the device is a UNI device.
-        // TODO: determine if only UNI devices will be Group Owners, so far, the answer is YES.
-        Log.d(TAG, "Creating ManagerService OBJECT");
-        wfdNetManagerService = new WfdNetManagerService(mManager, mChannel);
-
-        if (Build.MODEL.equals("MBOX")) {
-            Log.d(TAG, "Creating SoftAP");
-            // NOTE: try to remove any existing group. Currently the first attempt to create a group
-            //  fails because the framework is busy. Hopefully this solves the issue
-            wfdNetManagerService.tearDown();
-
-            wfdNetManagerService.createSoftAP();
-            Log.d(TAG, "Finished creation of SoftAP");
-        }
+        mNetService.start();
         ///
     }
 
@@ -170,53 +126,110 @@ public class MainActivity extends FragmentActivity {
         read_msg_box= findViewById(R.id.readMsg);
         connectionStatus= findViewById(R.id.connectionStatus);
         writeMsg = findViewById(R.id.writeMsg);
-//        fileList = findViewById(R.id.fileList);   // PE_NOTE: disable temporarily since it's not used and affects the UI
 
         // create wifi p2p manager providing the API for managing Wifi peer-to-peer connectivity
         mManager = (WifiP2pManager) getApplicationContext().getSystemService(Context.WIFI_P2P_SERVICE);
         // a channel that connects the app to the wifi p2p framework.
         mChannel = mManager.initialize(this, getMainLooper(),null);
         // create wifi broadcast receiver to receive events from the wifi manager
-        mReceiver = new WifiDirectBroadcastReceiver(mManager, mChannel, this);
+        mReceiver = new WifiDirectBroadcastReceiver(mManager, mChannel, mNetService);
 
-        mIntentFilter = new IntentFilter();     // TODO: PE_CMT: This could be a private final field
-        // indicates whether WiFi P2P is enabled
-        mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
-        // indicates that the available peer list has changed
-        mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
+        mIntentFilter = new IntentFilter();
         // indicates the state of Wifi P2P connectivity has changed
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
-        // indicates this device's configuration details have changed
-        mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
+
+        /// PE_AUTO_CONNECT
+        Log.d(TAG, "Creating WfdNetManagerService");
+        wfdNetManagerService = new WfdNetManagerService(mManager, mChannel);
+
+        // TODO: it would be better if the messages are processed by the NetService (Router and Client)
+        uiHandler = new Handler(getMainLooper(), new Handler.Callback() {
+            @Override
+            public boolean handleMessage(@NonNull Message message) {
+                switch (message.what) {
+                    case ThreadMessageTypes.MESSAGE_READ:
+                        // This message requests display in the UI the data received from another
+                        // device
+                        // The object received is a MeshMessage object
+                        MeshMessage meshMsg = (MeshMessage) message.obj;
+
+                        switch (meshMsg.getMsgType()) {
+                            case DATA_SINGLE_CLIENT:
+                                // TODO: for now we assume only strings are sent as the payload
+                                Log.d(TAG, "Displaying the message on UI.");
+                                Log.d(TAG, "dstDevices: \n" + meshMsg.getDstDevices());
+                                read_msg_box.setText((String) meshMsg.getData());
+                                break;
+                            case CLIENT_LIST:
+                                // NOTE: this case is used mostly by the Client devices. Routers
+                                //  update their list differently
+                                Log.d(TAG, "Updating the client list UI");
+                                HashMap<String, MeshDevice> groupClients = (HashMap<String, MeshDevice>) (meshMsg.getData());
+                                Log.d(TAG, "Received clients: " + groupClients);
+                                updateClientsListCallback.updateClientsUi(groupClients);
+                                break;
+                        }
+
+                        return true;
+
+                    case ThreadMessageTypes.MESSAGE_WRITTEN:
+                        return true;
+
+                    case ThreadMessageTypes.SOCKET_DISCONNECTION:
+                        ObjectSocketCommunication sc = (ObjectSocketCommunication) message.obj;
+                        Log.d(TAG, "Disconnecting SocketCommunication");
+                        sc.close();
+                        return true;
+
+                    default:
+                        // NOTE: CLIENT_SOCKET_CONNECTION is handled by the NetService.
+                        //  Router must build and send a list to the clients. Nothing to do for Clients
+                        mNetService.handleThreadMessage(message);
+                        return false;
+                }
+
+            }
+        });
+
+        // TODO: need a better way to create the group only if the device is a UNI device.
+        // TODO: determine if only UNI devices will be Group Owners, so far, the answer is YES.
+        if (Build.MODEL.equals("MBOX")) {
+            mNetService = new MRouterService(wfdNetManagerService, uiHandler);
+            // TODO: this callback should be shared, but this is for testing one element at a time
+//            ((MRouterService)mNetService).setClientListUiUpdateCallback(updateClientsListCallback);
+        } else {
+            mNetService = new MClientService(wfdNetManagerService, uiHandler);
+        }
+        ///
     }
 
     // implemented method for app object action listeners
     private void setListeners(){
 
+        mNetService.setClientListUiUpdateCallback(updateClientsListCallback);
+        mNetService.setGroupInfoUiCallback(groupInfoUiCallback);
+
         btnGroupInfo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 String str = "";
-                // TODO: PE_FIX: this is a simple fix. I still need to understand why the app doesn't work.
-                //  mWifiP2pInfo is null in my case, therefore we cannot access its methods. It seems like
-                //  mWifiP2pInfo is assigned an object in the "interfaces" section below. Look for WifiP2pManager.ConnectionInfoListener()
+
                 if (mWifiP2pInfo == null) {
                     // Pop-up notifying device NOT connected
                     Toast.makeText(getApplicationContext(),"No group", Toast.LENGTH_SHORT).show();
                     return;
                 }
+
                 if (mWifiP2pInfo.isGroupOwner){
                     str = str + "GROUP OWNER:  ME\n";
                     Collection <WifiP2pDevice> clients = mGroup.getClientList();
-                    Iterator<WifiP2pDevice> device = clients.iterator();
-                    while (device.hasNext()) {
-                        WifiP2pDevice client = device.next();
+                    for (WifiP2pDevice client : clients) {
                         String macString = client.deviceAddress;
-                        str = str + "CLIENT :  "+ client.deviceName + " " + macString+ "\n";
+                        str = str + "CLIENT :  " + client.deviceName + " " + macString + "\n";
 
                     }
-                    str = str + "GROUP NUM: " + groupNum+"\n";
+                    str = str + "GROUP NUM:\n";
                 }else {
                     str = "GROUP OWNER:  "+mGroup.getOwner().deviceName+"  "+mWifiP2pInfo.groupOwnerAddress.getHostAddress()+"\n";
                     try {
@@ -249,35 +262,18 @@ public class MainActivity extends FragmentActivity {
         btnDiscover.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // listener discovering peers from broadcast channel
-//                mManager.discoverPeers(mChannel, new WifiP2pManager.ActionListener() {
-//
-//                    // if listener created successfully display Discovery Started
-//                    @Override
-//                    public void onSuccess() {
-//                        Log.i(TAG, "btnDiscover.onClick WifiP2pManager.onSuccess()");
-//                        connectionStatus.setText("Discovery Started");
-//                    }
-//                    // if listener NOT created successfully display Discovery Failed
-//                    @Override
-//                    public void onFailure(int i) {
-//                        Log.i(TAG, "btnDiscover.onClick WifiP2pManager.onFailure()");
-//                        connectionStatus.setText("Discovery Failed"+i);
-//                    }
-//                });
-
                 /// PE_AUTO_CONNECT TMP
-                // TODO: This section is just for debugging/testing purposes. The real app shouldn't require
-                //  this. Here we use the button to start the broadcast and discover manually.
+                // NOTE: Here we use the button to start the broadcast and discover manually if the first
+                //  automatic discovery failed.
 
-                // NOTE: This is a temporary attribute. Also, this if/else didn't exist, only the call to
-                // discover services, but I'm still debugging, so, maybe it's the right thing to do.
+                // NOTE: Need another way to distinguish between group owner and client. Maybe this
+                //  is part of a refactor and it should be done within the MRouterService/MClientService
+                //  classes
                 if (wfdNetManagerService._isGO) {
-                    wfdNetManagerService._startDNSBroadcast();
+                    Log.d(TAG, " btnDiscover onClick: No action.");
                 } else {
-                    // NOTE: do we need to also pause and unregister the services when the app is paused/destroyed
-                    //  as we do with NSD for local networks? The guide doesn't say anything
                     // NOTE: all these are async calls
+                    Log.d(TAG, "Starting service discovery again.");
                     wfdNetManagerService.wfdDnsSdManager.discoverServices();
                     ///
                 }
@@ -288,51 +284,9 @@ public class MainActivity extends FragmentActivity {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                // this array is where the devices are stored for connections
-                WifiP2pDevice device = deviceArray[i];
-                // Config for setting up p2p connection
-                WifiP2pConfig config = new WifiP2pConfig();
-                // Set config device address from chosen device
-                config.deviceAddress = device.deviceAddress;
-
-                if (device.isGroupOwner()) {
-                    Log.i(TAG, "Connecting to a GO.");
-//                    config.groupOwnerIntent = 0;
-                    mManager.connect(mChannel, config, new WifiP2pManager.ActionListener() {
-                        // Called when device successfully connected
-                        @Override
-                        public void onSuccess() {
-                            Log.i(TAG, "Connection to " + device.deviceName + " succeeded.");
-                            // Pop-up notifying device connected
-                            connectionStatus.setText("Connecting to GO "+ device.deviceName);
-                        }
-                        // Called when device NOT successfully connected
-                        @Override
-                        public void onFailure(int i) {
-                            Log.i(TAG, "Connection to " + device.deviceName + " failed.");
-                            // Pop-up notifying device NOT connected
-                            Toast.makeText(getApplicationContext(),"NOT CONNECTED", Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                } else {
-                    Log.i(TAG, "Negotiating GO role.");
-                    mManager.connect(mChannel, config, new WifiP2pManager.ActionListener() {
-                        // Called when device successfully connected
-                        @Override
-                        public void onSuccess() {
-                            Log.i(TAG, "Connection to " + device.deviceName + " succeeded.");
-                            // Pop-up notifying device connected
-                            Toast.makeText(getApplicationContext(),"CONNECTING TO "+device.deviceName, Toast.LENGTH_SHORT).show();
-                        }
-                        // Called when device NOT successfully connected
-                        @Override
-                        public void onFailure(int i) {
-                            Log.i(TAG, "Connection to " + device.deviceName + " failed.");
-                            // Pop-up notifying device NOT connected
-                            Toast.makeText(getApplicationContext(),"NOT CONNECTED", Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                }
+                // We only update the destination device of the message
+                msgDstDevice = groupClientsList.get(i);
+                Log.d(TAG, "Selected destination device: " + msgDstDevice);
             }
         });
 
@@ -349,214 +303,88 @@ public class MainActivity extends FragmentActivity {
                         return;
                     }
 
-                    if (mWifiP2pInfo.isGroupOwner) {
-                        Log.i(TAG, "Server sends message: " + msg);
-                        // TODO: For now, this method sends the message to all clients connected. We
-                        //  need to implement some logic/routing algorithm
-                        serverClass.write(msg.getBytes(), 0);
-                    } else {
-                        Log.i(TAG, "Client sends message: " + msg);
-                        clientClass.write(msg.getBytes());
-                    }
+                    // TODO: right now we only support one destination device
+                    ArrayList<String> dstList = new ArrayList<>(1);
+                    dstList.add(msgDstDevice.macAddress);
+
+                    MeshMessage meshMessage = new MeshMessage(MeshMessageType.DATA_SINGLE_CLIENT,
+                            msg,
+                            dstList);
+                    mNetService.sendMessage(meshMessage);
                 });
             }
         });
     }
 
-    // Wifi P2P Manager peer list listener for collecting list of wifi peers
-    WifiP2pManager.PeerListListener peerListListener = new WifiP2pManager.PeerListListener() {
-
-        // override method to find peers available
+    /// PE_MSG_SPECIFIC_CLIENTS
+    // TODO: this is not the correct way to do this. It's just to save development time. The best
+    //  would be to use the MVVM model to deal with UI updates. Also, if we use lists, we should use
+    //  the RecyclerView element in our UI.
+    /*
+     * This method will give a new use to the `peerList`, `deviceNameArray` and `deviceArray` and
+     * their related UI view, given that with the automatic connection feature we no longer use the
+     * peerList to display the possible peers
+     */
+    // TODO: this will be used also by the ClientService, so, change the name
+     NetService.ClientListUiCallback updateClientsListCallback = new NetService.ClientListUiCallback() {
         @Override
-        public void onPeersAvailable(WifiP2pDeviceList peerList) {
-            // TODO: check if every time this listener is called, it means that the peerList is different
-            //  from the previous one. I don't think we need to check if lists are different.
-            Log.i(TAG, "peerListListener.onPeersAvailable");
+        public void updateClientsUi(HashMap<String, MeshDevice> clients) {
+            Log.d(TAG, "Updating client list");
+            Log.d(TAG, "List of clients received: " + clients);
+            groupClientsList.clear();
+            groupClientsList.addAll(new ArrayList<>(clients.values()));
 
-            if (!peerList.getDeviceList().equals(peers)) {
-//                Log.i(TAG, "onPeersAvailable: peerList != peers");
-                peers.clear();
-                peers.addAll(peerList.getDeviceList());
+            //store peers list device names to be display and add to device array to be selected
+            groupClientsNames = new String[clients.size()];
+            Log.d(TAG, "Number of clients: " + clients.size());
 
-                //store peers list device names to be display and add to device array to be selected
-                deviceNameArray = new String[peerList.getDeviceList().size()];
-                deviceArray = new WifiP2pDevice[peerList.getDeviceList().size()];
-                int index = 0;
-                for(WifiP2pDevice device : peerList.getDeviceList()){
-                    // NOTE: maybe is not so good to modify the name here, consider a data class or
-                    //  having another list which will be the "displayName" in which we will add who
-                    //  is a GO
-                    if (device.isGroupOwner()) {
-                        deviceNameArray[index] = device.deviceName + " : (GO)";
-                    } else {
-                        deviceNameArray[index] = device.deviceName;
-                    }
-
-                    deviceArray[index] = device;
-                    index++;
-                }
-                // TODO: RecyclerView is now preferred instead of ListView. Anyway, this is just a
-                //  prototype, so it doesn't hurt. But consider changing it after all functionality is working.
-                // add all the device names to an adapter then add the adapter to the layout listview
-                ArrayAdapter<String> adapter = new ArrayAdapter<>(getApplicationContext(),android.R.layout.simple_list_item_1,deviceNameArray);
-                listView.setAdapter(adapter);
-
-                ///
-                // TODO: check if this method is better (from https://developer.android.com/training/connect-devices-wirelessly/wifi-direct)
-                // If an AdapterView is backed by this data, notify it of the change. For instance,
-                // if you have a ListView of available peers, trigger an update.
-//                ((WiFiPeerListAdapter) getListAdapter()).notifyDataSetChanged();
-                ///
+            // Append " : GO" to the name if the device is a GO.
+            for (int i = 0; i < clients.size(); ++i) {
+                groupClientsNames[i] = groupClientsList.get(i).isGo ?
+                        groupClientsList.get(i).name + " : GO" :
+                        groupClientsList.get(i).name;
             }
 
-            // if no peers found pop-up "No Device Found"
-            if (peers.size() == 0) {
-                Log.d(TAG, "No devices found.");
-                Toast.makeText(getApplicationContext(), "No Device Found", Toast.LENGTH_SHORT).show();
-            }
+            // TODO: RecyclerView is now preferred instead of ListView.
+            // add all the device names to an adapter then add the adapter to the layout listview
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(getApplicationContext(),
+                    android.R.layout.simple_list_item_1,
+                    groupClientsNames);
+            listView.setAdapter(adapter);
         }
     };
 
-    // NOTE: Listener used by the BroadcastReceiver when WIFI_P2P_CONNECTION_CHANGED_ACTION
-    //  interface for callback invocation when connection info is available
-    WifiP2pManager.ConnectionInfoListener connectionInfoListener = new WifiP2pManager.ConnectionInfoListener() {
-        // If the connection info is available
+
+    NetService.GroupInfoUiCallback groupInfoUiCallback = new NetService.GroupInfoUiCallback() {
         @Override
-        public void onConnectionInfoAvailable(WifiP2pInfo wifiP2pInfo) {
-            Log.d(TAG, "connectionInfoListener.onConnectionInfoAvailable");
-
-            connected = true;
-            mWifiP2pInfo = wifiP2pInfo;
-            // Get Host Ip Address
-            final InetAddress groupOwnerAddress = wifiP2pInfo.groupOwnerAddress;
-
-            Log.i(TAG, "wifiP2pInfo: " + wifiP2pInfo);
-            Log.i(TAG, "wifiP2pInfo.isGroupOwner:      " + wifiP2pInfo.isGroupOwner);
-            Log.i(TAG, "wifiP2pInfo.groupOwnerAddress: " + wifiP2pInfo.groupOwnerAddress);
-            Log.i(TAG, "wifiP2pInfo.groupFormed:       " + wifiP2pInfo.groupFormed);
-
-
-            if (!wifiP2pInfo.groupFormed) {
-                Log.i(TAG, "connectionInfoListener: group not formed.");
-                return;
-            }
-
-            /// PE_AUTO_CONNECT
-
-            // TODO: According to https://developer.android.com/training/connect-devices-wirelessly/nsd#discover
-            //  it's recommended to use a non-fixed port number. Request it to the system and store
-            //  it in a variable and pass it around.
-//            serverSocket = new ServerSocket(0);
-//            // Store the chosen port.
-//            localPort = serverSocket.getLocalPort();
-
-            final int PORT = 8888;
-            ///
-
-            // Once the connection info is ready, create the sockets depending on the role of the device
-            // Check if we are the GO or a client
-            if (wifiP2pInfo.isGroupOwner) {
-                // TODO: I think the ServerSocket needs to be created at the moment we create the softAP
-                //  since it's recommended to have a dynamic port instead of a fixed one.
-                // TODO: convert this into a singleton?
-                if (serverClass == null) {
-                    // Create a ServerSocket
-                    serverClass = new ServerClass(uiHandler, PORT);
-                }
-
-                // One thread to wait for each possible client
-                ExecutorService executorService = Executors.newSingleThreadExecutor();
-                Log.i(TAG, "Starting server thread");
-                executorService.execute(serverClass);
-            }
-            else {
-                // NOTE: I suppose we should execute this once
-                // TODO: use return instead of indenting all the code: `if (clientClass != null) return`
-                //  Or convert this into a singleton?
-                if (clientClass == null) {
-                    // Create a (client) Socket
-                    clientClass = new ClientClass(groupOwnerAddress, uiHandler, PORT);
-                    ExecutorService executorService = Executors.newSingleThreadExecutor();
-                    Log.i(TAG, "Starting client thread");
-                    executorService.execute(clientClass);
-                }
-            }
-        }
-    };
-
-    WifiP2pManager.GroupInfoListener groupInfoListener = new WifiP2pManager.GroupInfoListener(){
-        @Override
-        public void onGroupInfoAvailable(WifiP2pGroup wifiP2pGroup) {
-            Log.d(TAG, "groupInfoListener.onGroupInfoAvailable");
-            mGroup = wifiP2pGroup;
-            Collection <WifiP2pDevice> collection = wifiP2pGroup.getClientList();
-            groupNum = collection.size();
-            String str = "";
+        public void updateGroupInfoUi(WifiP2pGroup wifiP2pGroup) {
+            Log.d(TAG, "groupInfoUiCallback");
+            StringBuilder stringBuilder = new StringBuilder("");
 
             if (wifiP2pGroup.isGroupOwner()) {
-                str = str + "GROUP OWNER:  ME\n";
-                str = str + "GROUP NUM: " + groupNum+"\n";
+                stringBuilder.append("GROUP OWNER:  ME\n")
+                        .append("GROUP NUM: ")
+                        .append(wifiP2pGroup.getClientList().size())
+                        .append("\n");
             } else {
-                str = "GROUP OWNER:  "+ wifiP2pGroup.getOwner().deviceName+"  " +wifiP2pGroup.getOwner().deviceAddress+"\n";
+                stringBuilder.append("GROUP OWNER:  ")
+                        .append(wifiP2pGroup.getOwner().deviceName)
+                        .append(wifiP2pGroup.getOwner().deviceAddress)
+                        .append("\n");
             }
-            read_msg_box.setText(str);
 
-            /// PE_AUTO_CONNECT
-            // TODO: it seems that at this point the device (an object) returned by `wifiP2pGroup.getOwner()` is
-            //  not initialized
-            Log.d(TAG, "isGO:          " + wifiP2pGroup.isGroupOwner());
-            Log.d(TAG, "owner:         " + wifiP2pGroup.getOwner());
-            Log.d(TAG, "owner.isGO:    " + wifiP2pGroup.getOwner().isGroupOwner());
-            Log.d(TAG, "deviceName:    " + wifiP2pGroup.getOwner().deviceName);
-            Log.d(TAG, "deviceAddress: " + wifiP2pGroup.getOwner().deviceAddress);
-            switch (wifiP2pGroup.getOwner().status) {
-                case WifiP2pDevice.CONNECTED:
-                    Log.d(TAG, "status:        CONNECTED");
-                    break;
-                case WifiP2pDevice.INVITED:
-                    Log.d(TAG, "status:        INVITED");
-                    break;
-                case WifiP2pDevice.FAILED:
-                    Log.d(TAG, "status:        FAILED");
-                    break;
-                case WifiP2pDevice.AVAILABLE:
-                    Log.d(TAG, "status:        AVAILABLE");
-                    break;
-                case WifiP2pDevice.UNAVAILABLE:
-                    Log.d(TAG, "status:        UNAVAILABLE");
-                    break;
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                Log.d(TAG, "networkName:   " + wifiP2pGroup.getNetworkId());    // Requires min API 30
-            }
-            Log.d(TAG, "networkName:   " + wifiP2pGroup.getNetworkName());
-            Log.d(TAG, "passphrase:    " + wifiP2pGroup.getPassphrase());
-            Log.d(TAG, "interface:    " + wifiP2pGroup.getInterface());
-            ///
+            Log.d(TAG, " read_msg_box: " + stringBuilder);
+            read_msg_box.setText(stringBuilder.toString());
         }
     };
-
-    WifiP2pManager.DeviceInfoListener deviceInfoListener = new WifiP2pManager.DeviceInfoListener() {
-        @Override
-        public void onDeviceInfoAvailable(@Nullable WifiP2pDevice wifiP2pDevice) {
-            // NOTE: This callback doesn't provide much information. At this point the device is not
-            //  the the GO. And as we've seen, we cannot get the MAC address from WifiP2pDevice
-            Log.d(TAG, "deviceInfoListener.onDeviceInfoAvailable");
-            // Toast.makeText(getApplicationContext(), "ADDRESS = "+wifiP2pDevice.deviceAddress, Toast.LENGTH_SHORT).show();
-            localAddress = wifiP2pDevice.deviceAddress;
-            Log.d(TAG, "deviceName:     " + wifiP2pDevice.deviceName);
-            Log.d(TAG, "localAddress:   " + wifiP2pDevice.deviceAddress);
-            Log.d(TAG, "isGroupOwner(): " + wifiP2pDevice.isGroupOwner());
-//            Log.d(TAG, "getWfdInfo(): " + wifiP2pDevice.getWfdInfo());
-        }
-    };
+    ///
 
 
     // When activity enters the resume state after onCreate and onStart
     @Override
-    protected  void onResume(){
+    protected void onResume(){
         super.onResume();
-        mReceiver = new WifiDirectBroadcastReceiver(mManager, mChannel, this);
+        mReceiver = new WifiDirectBroadcastReceiver(mManager, mChannel, mNetService);
         registerReceiver(mReceiver,mIntentFilter);
         /// PE_AUTO_CONNECT
 //        if (nsdHelper != null) {
@@ -573,6 +401,11 @@ public class MainActivity extends FragmentActivity {
     @Override
     protected void onPause(){
         /// PE_AUTO_CONNECT
+        // TODO: do we need to stop and unregister the services when the app is paused/destroyed in
+        //  the case of WiFi Direct for SD as it is shown with the guide of NSD for local networks?
+        //  The guide for WiFi Direct for SD (https://developer.android.com/training/connect-devices-wirelessly/nsd-wifi-direct)
+        //  doesn't say anything but, the guide for NSD on a local network (https://developer.android.com/training/connect-devices-wirelessly/nsd)
+        //  does the following:
         // We have to unregister and stop advertising the service
 //        if (nsdManager != null) {
 //            nsdManager.tearDown();
@@ -584,23 +417,14 @@ public class MainActivity extends FragmentActivity {
     }
 
     /// PE_AUTO_CONNECT
-    // TODO: this doesn't seem to apply to
     @Override
     protected void onDestroy() {
+        // TODO: same as the comment in the `onPause()` method above.
 //        nsdHelper.tearDown();
 //        connection.tearDown();
 
-        // TODO: need to close the sockets and I don't think it's done like this
-        if (clientClass != null) {
-            clientClass.closeSocket();
-        }
-
-        if (serverClass != null) {
-            serverClass.closeSocket();
-        }
-        //
-
-        wfdNetManagerService.tearDown();
+        mNetService.destroy();
+//        wfdNetManagerService.tearDown();
         mChannel.close();
         super.onDestroy();
     }

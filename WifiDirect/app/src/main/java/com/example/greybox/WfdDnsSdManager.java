@@ -1,13 +1,12 @@
 package com.example.greybox;
 
-import android.net.MacAddress;
 import android.net.wifi.p2p.WifiP2pConfig;
-import android.net.wifi.p2p.WifiP2pConfig.Builder;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.WifiP2pManager.ActionListener;
 import android.net.wifi.p2p.nsd.WifiP2pDnsSdServiceInfo;
 import android.net.wifi.p2p.nsd.WifiP2pDnsSdServiceRequest;
+import android.os.Build;
 import android.util.Log;
 
 import java.util.HashMap;
@@ -17,7 +16,7 @@ import java.util.Objects;
 
 /// PE_AUTO_CONNECT
 
-// TODO: either delete "Manager" from the class' name or change the name of the `WifiP2pManager manager`
+// TODO: either delete "Manager" from the name or change the name of the `WifiP2pManager manager`
 //  attribute since it gives the impression that `manager` could be related to the name of the class
 public class WfdDnsSdManager {
     private static final String TAG = "WfdDnsSdManager";
@@ -47,11 +46,10 @@ public class WfdDnsSdManager {
     //  Methods
     // ---------------------------------------------------------------------------------------------
 
-    // TODO: maybe this method is useless. What if we need to do something else on the callback?
+    // TODO: maybe this method is not good. What if we need to do something else on the callback?
     public void addLocalService(WifiP2pDnsSdServiceInfo serviceInfo) {
-        // Add the local service, sending the service info, network channel,
-        // and listener that will be used to indicate success or failure of
-        // the request.
+        // Add the local service, sending the service info, network channel, and listener that will
+        // be used to indicate success or failure of the request.
         manager.addLocalService(channel, serviceInfo, new ActionListener() {
             @Override
             public void onSuccess() {
@@ -67,7 +65,7 @@ public class WfdDnsSdManager {
             public void onFailure(int errorCode) {
                 Log.d(TAG, " addLocalService: Request to add local service failed.");
                 Log.d(TAG, " serviceInfo: " + serviceInfo);
-                WfdErrorInterpreter.logError(errorCode);
+                WfdStatusInterpreter.logError(errorCode);
             }
         });
     }
@@ -89,7 +87,7 @@ public class WfdDnsSdManager {
             public void onFailure(int errorCode) {
                 Log.d(TAG, " removeLocalService: Request to remove services failed.");
                 Log.d(TAG, " serviceInfo: " + serviceInfo);
-                WfdErrorInterpreter.logError(errorCode);
+                WfdStatusInterpreter.logError(errorCode);
             }
         });
     }
@@ -134,7 +132,7 @@ public class WfdDnsSdManager {
                             record.get("pass"),
                             Integer.parseInt(Objects.requireNonNull(record.get("port")))));
 
-                    // TODO: the article suggests to start a timer once we received a
+                    // TODO: The article suggests starting a timer once we find a service.
                     //
                     //
                 }
@@ -144,9 +142,10 @@ public class WfdDnsSdManager {
             }
         };
 
-        // TODO: I don't know if this callback is useful in our case. The connection information is
+        // TODO: Not sure if this callback is useful in our case. The connection information is
         //  in the TXT record. Here we don't have direct access to it in the arguments. Maybe I need
         //  to do the same as the example
+        // Source: https://developer.android.com/training/connect-devices-wirelessly/nsd-wifi-direct
         // This receives the actual description and connection information. The service response
         // listener uses the relationship device-name created in txtRecordListener to link the DNS
         // record with the corresponding service information.
@@ -158,13 +157,7 @@ public class WfdDnsSdManager {
                 Log.d(TAG, "onDnsSdServiceAvailable");
                 Log.d(TAG, " instanceName:     " + instanceName);       // service name: SERVICE_NAME (greybox_mesh)
                 Log.d(TAG, " registrationType: " + registrationType);   // service type: SERVICE_TYPE + .local. (_nsdgreybox._tcp.local.)
-                Log.d(TAG, " deviceInfo:       " + deviceInfo);         // device info (WifiP2pDevice)
-
-                // TODO: why? this is from https://developer.android.com/training/connect-devices-wirelessly/nsd-wifi-direct
-                // Update the device name with the human-friendly version from
-                // the DnsTxtRecord, assuming one arrived.
-//                deviceInfo.deviceName = names.containsKey(deviceInfo.deviceAddress) ?
-//                        names.get(deviceInfo.deviceAddress) : deviceInfo.deviceName;
+                Log.d(TAG, " deviceInfo:\n" + deviceInfo);              // device info (WifiP2pDevice)
 
                 // TODO: I won't have a UI element to display this, but it could be useful as a
                 //  reference
@@ -195,19 +188,13 @@ public class WfdDnsSdManager {
 
                         @Override
                         public void onSuccess() {
-                            // TODO: I guess I can't use a `connectionData` since it will create an
-                            //  implicit reference. Need to review
-                            // TODO: I guess this would be still a security issue, so, this should be
-                            //  just for debugging/testing
-//                            Log.d(TAG, " Connected to: " + connectionData.getSsid()
-//                                    + "\n" + connectionData.getDeviceAddress());
                             Log.d(TAG, " CONNECTED!");
                         }
 
                         @Override
                         public void onFailure(int errorCode) {
                             Log.d(TAG, "Failed to create group. Error code: " + errorCode);
-                            WfdErrorInterpreter.logError(errorCode);
+                            WfdStatusInterpreter.logError(errorCode);
                             // TODO: is there any way to retry creation of the group if the first attempt failed?
                         }
                     });
@@ -247,7 +234,7 @@ public class WfdDnsSdManager {
             @Override
             public void onFailure(int errorCode) {
                 Log.d(TAG, " addServiceRequest: Request to add services failed.");
-                WfdErrorInterpreter.logError(errorCode);
+                WfdStatusInterpreter.logError(errorCode);
             }
         });
 
@@ -267,7 +254,8 @@ public class WfdDnsSdManager {
      */
     private void requestDiscoverServices() {
         manager.discoverServices(channel, new ActionListener() {
-
+            // TODO: this ActionListener implementation seems generic, only the message changes.
+            //  We could only have one
             @Override
             public void onSuccess() {
                 Log.d(TAG, " discoverServices: Request to discover services succeeded.");
@@ -276,9 +264,34 @@ public class WfdDnsSdManager {
             @Override
             public void onFailure(int errorCode) {
                 Log.e(TAG, " discoverServices: Request to discover services failed.");
-                WfdErrorInterpreter.logError(errorCode);
+                WfdStatusInterpreter.logError(errorCode);
             }
         });
+    }
+
+    private void removeServiceRequest() {
+        Log.d(TAG, "removeServiceRequest start");
+
+        if (serviceRequest == null) {
+            Log.d(TAG, "removeServiceRequest end");
+            return;
+        }
+        manager.removeServiceRequest(channel, serviceRequest, new ActionListener() {
+            // TODO: this ActionListener implementation seems generic, only the message changes.
+            //  We could only have one
+            @Override
+            public void onSuccess() {
+                Log.d(TAG, " removeServiceRequest: Request to remove the service succeeded.");
+            }
+
+            @Override
+            public void onFailure(int errorCode) {
+                Log.e(TAG, " removeServiceRequest: Request to remove the service failed.");
+                WfdStatusInterpreter.logError(errorCode);
+            }
+        });
+
+        Log.d(TAG, "removeServiceRequest end");
     }
 
 
@@ -290,10 +303,13 @@ public class WfdDnsSdManager {
         Log.d(TAG, " isLocalServiceRegistered: " + isLocalServiceRegistered);
         Log.d(TAG, " isAddServiceRequestMade:  " + isAddServiceRequestMade);
 
-//        if (!isAddServiceRequestMade) {
-            registerListeners();
-            addServiceRequest();
-//        }
+        // Clear all requests.
+        // TODO: it would be better to use removeServiceRequests(channel, serviceRequest, listener),
+        //  but we need to keep a reference to the serviceRequest in question
+//        manager.clearServiceRequests(channel, null);
+        removeServiceRequest();
+        registerListeners();
+        addServiceRequest();
         requestDiscoverServices();
         Log.d(TAG, "discoverServices end");
     }

@@ -25,11 +25,11 @@ android {
     /// PE_AUTO_CONNECT
     // TODO: remove when auto_connect feature is implemented
     sourceSets {
-        main {
-            java {
-                exclude '**/DnsSdManager.java'
-            }
-        }
+//        main {
+//            java {
+//                exclude '**/DnsSdManager.java'
+//            }
+//        }
 //        androidTest {
 //            java {
 //                exclude '**/TestSomeExcludedClass.java'

@@ -4,12 +4,14 @@ import android.os.Handler;
 import android.renderscript.ScriptGroup;
 import android.util.Log;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.net.Socket;
 
-public class SocketCommunication implements Runnable {
+public class SocketCommunication implements Runnable, Serializable {
     private static final String TAG = "SocketCommunication";
 
     private Socket socket;
@@ -19,7 +21,7 @@ public class SocketCommunication implements Runnable {
     private byte[] buffer = new byte[1024]; // Stores the transmitted message
 
 
-    SocketCommunication(Socket socket, Handler handler) {
+    public SocketCommunication(Socket socket, Handler handler) {
         this.socket = socket;
         this.handler = handler;
     }
@@ -29,14 +31,14 @@ public class SocketCommunication implements Runnable {
     public void run() {
 
         // Send a this object to be handled in another thread. Just in case we want to communicate
-        handler.obtainMessage(MainActivity.HANDLE, this).sendToTarget();
+        handler.obtainMessage(ThreadMessageTypes.HANDLE, this).sendToTarget();
 
         int bytes;
 
         try {
             in = socket.getInputStream();
             out = socket.getOutputStream();
-            Log.i(TAG, "Got in/out streams.");
+            Log.d(TAG, "Got in/out streams.");
         } catch (IOException e) {
             Log.e(TAG, "Exception while getting input and output streams.", e);
             close();
@@ -48,7 +50,7 @@ public class SocketCommunication implements Runnable {
             try {
                 // Read message inputStream from socket and store in variable
                 bytes = in.read(buffer);
-                Log.i(TAG, "Read " + bytes + " bytes.");
+                Log.d(TAG, "Read " + bytes + " bytes.");
 
                 // Communication finished.
                 if (bytes == -1) { break; }
@@ -56,15 +58,14 @@ public class SocketCommunication implements Runnable {
                 // If there is a message
                 if (bytes > 0) {
                     // Put a message in the `MessageQueue` of the thread handled by `handler`
-                    handler.obtainMessage(MainActivity.MESSAGE_READ, bytes, -1, buffer).sendToTarget();
-                    Log.i("GREYBOX", "ClientSocket. Posted message.");
+                    handler.obtainMessage(ThreadMessageTypes.MESSAGE_READ, bytes, -1, buffer).sendToTarget();
+                    Log.d(TAG, "Posted a message.");
                 }
             } catch (IOException e) {
-                Log.e(TAG, "Error while reading. Socket disconnected?");
-                e.printStackTrace();
+                Log.e(TAG, "Error while reading. Socket disconnected?", e);
                 // Build and pass a message to indicate to other thread that we disconnected.
-                handler.obtainMessage(MainActivity.SOCKET_DISCONNECTION, this).sendToTarget();
-//                throw new RuntimeException("Error while reading.");
+                handler.obtainMessage(ThreadMessageTypes.SOCKET_DISCONNECTION, this).sendToTarget();
+                break;
             }
         }
     }
@@ -77,15 +78,21 @@ public class SocketCommunication implements Runnable {
         }
     }
 
-    private void close() {
+    public void close() {
+        Log.d(TAG, "Closing socket.");
+        safeClose(in);
+        safeClose(out);
+        safeClose(socket);
+    }
+
+    private void safeClose(Closeable obj) {
+        if (obj == null) return;
+
         try {
-            // TODO: do we need to close the streams or is it done automatically since they are `Closeable`?
-//            in.close();
-//            out.close();
-            socket.close();
+            obj.close();
         } catch (IOException e) {
             e.printStackTrace();
-            Log.e(TAG, "Error closing socket", e);
+            Log.e(TAG, "Error closing object " + obj, e);
         }
     }
 
