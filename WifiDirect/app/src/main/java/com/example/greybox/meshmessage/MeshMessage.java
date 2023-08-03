@@ -10,13 +10,12 @@ import com.example.greybox.MeshDevice;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.UUID;
 
 public class MeshMessage implements Serializable {
 
     /// NOTE: these fields are mentioned in the article
-    private UUID uuid;
+    private final UUID uuid;
     private MeshMessageType msgType;
     private ArrayList<String> visitedMacList = new ArrayList<>();   // NOTE: this seems to be used for clients acting as relays
     private Object payload;
@@ -44,10 +43,6 @@ public class MeshMessage implements Serializable {
     // --------------------------------------------------------------
     public UUID getUuid() {
         return uuid;
-    }
-
-    public void setUuid(UUID uuid) {
-        this.uuid = uuid;
     }
 
     public MeshMessageType getMsgType() {
@@ -100,7 +95,10 @@ public class MeshMessage implements Serializable {
                     res.append((String) payload).append("\n");
                     break;
                 case CLIENT_LIST:
-                    res.append((HashMap<String, MeshDevice>) payload).append("\n");
+                    /// testing
+//                    res.append((HashMap<String, MeshDevice>) payload).append("\n");
+                    res.append((ArrayList<MeshDevice>) payload).append("\n");
+                    ///
                     break;
                 default:
                     res.append("Unknown payload type").append("\n");

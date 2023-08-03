@@ -1,18 +1,14 @@
 package com.example.greybox;
 
 import android.net.wifi.p2p.WifiP2pConfig;
-import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.nsd.WifiP2pDnsSdServiceInfo;
-import android.os.Build;
 import android.util.Log;
 
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -33,9 +29,13 @@ public class WfdNetManagerService {
     private static final String ENCRYPTION_KEY = "TODO";  // TODO: is it secure to have the encryption key as an attribute?
 
     public WfdDnsSdManager wfdDnsSdManager;
-    // TODO: Unfortunately, we have to know the name assigned to the wireless interface. Not sure if
-    //  this might vary.
-    final static String WIRELESS_INTERFACE_NAME = "wlan0";
+    /// TODO: THIS DOESN'T WORK. In one device with Android 13 we cannot get the MAC address. On another
+    //   device with Android 12, the MAC obtained is different to that obtained from the WiFi P2P framework.
+    //   I'm not sure if I'm using the right interface, but it's not a standard name.
+    //   In my devices it's called either: p2p-wlan0-2, p2p0, p2p-wlan0-3
+//    final static String WIRELESS_INTERFACE_NAME = "wlan0";  // This interface gives us a different MAC from the used in WiFi Direct
+    final static String WIFI_P2P_INTERFACE_NAME = "p2p";    // Will be used with "String.contains()" since varies depending on the device
+    ///
     public String deviceMacAddress;
 
     /// TODO: we still have a dependency on this value. It's used to restart the service discovery
@@ -78,20 +78,6 @@ public class WfdNetManagerService {
     public void createSoftAP() {
 
         creationRetriesLeft--;
-        /// TODO: Temp. Information about the current build, extracted from system properties.
-        // NOTE: do we set some of these properties when building the app?
-        Log.d(TAG, "Build.BOARD:    " + Build.BOARD);
-        Log.d(TAG, "Build.BRAND:    " + Build.BRAND);
-        Log.d(TAG, "Build.DEVICE:   " + Build.DEVICE);
-        Log.d(TAG, "Build.DISPLAY:  " + Build.DISPLAY);
-        Log.d(TAG, "Build.HARDWARE: " + Build.HARDWARE);
-        Log.d(TAG, "Build.HOST:     " + Build.HOST);
-        Log.d(TAG, "Build.ID:       " + Build.ID);
-        Log.d(TAG, "Build.MANUFACTURER: " + Build.MANUFACTURER);
-        Log.d(TAG, "Build.MODEL:    " + Build.MODEL);
-        Log.d(TAG, "Build.PRODUCT:  " + Build.PRODUCT);
-        Log.d(TAG, "Build.USER:  " + Build.USER);
-        ///
 
         // Try to get the MAC address since the beginning
         if (deviceMacAddress == null) {
@@ -295,7 +281,8 @@ public class WfdNetManagerService {
             List<NetworkInterface> networkInterfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
 
             for (NetworkInterface netInterface : networkInterfaces) {
-                if (!netInterface.getName().equalsIgnoreCase(WIRELESS_INTERFACE_NAME)) continue;
+                if (!netInterface.getName().contains(WIFI_P2P_INTERFACE_NAME)) continue;
+//                if (!netInterface.getName().equalsIgnoreCase(WIFI_P2P_INTERFACE_NAME)) continue;
 
                 byte[] macAddress = netInterface.getHardwareAddress();
                 return macBytesToString(macAddress);

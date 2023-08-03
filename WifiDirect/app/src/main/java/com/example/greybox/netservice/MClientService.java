@@ -8,17 +8,19 @@ import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
-import android.widget.TextView;
 
 import androidx.annotation.Nullable;
 
-import com.example.greybox.MainActivity;
+import com.example.greybox.MeshDevice;
+import com.example.greybox.ThreadMessageTypes;
 import com.example.greybox.WfdNetManagerService;
 import com.example.greybox.WfdStatusInterpreter;
 import com.example.greybox.meshmessage.MeshMessage;
 
 import java.net.InetAddress;
-import java.util.Collection;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -65,12 +67,69 @@ public class MClientService extends NetService {
     @Override
     public void handleThreadMessage(Message msg) {
         switch (msg.what) {
-//            case ThreadMessageType
+            case ThreadMessageTypes.MESSAGE_READ:
+                // This message requests display in the UI the data received from another
+                // device
+                // The object received is a MeshMessage object
+                MeshMessage meshMsg = (MeshMessage) msg.obj;
+
+                switch (meshMsg.getMsgType()) {
+                    // TODO: for this case we could use the template method design pattern since it's
+                    //  almost identical for the Client and the GO
+                    case DATA_SINGLE_CLIENT:
+                        // TODO: for now we assume only strings are sent as the payload
+                        Log.d(TAG, "DATA_SINGLE_CLIENT");
+                        Log.d(TAG, "dstDevices: \n" + meshMsg.getDstDevices());
+
+                        // We currently support only one recipient
+                        String recipient = meshMsg.getDstDevices().get(0);
+                        Log.d(TAG, "recipient: \n" + recipient);
+
+                        if (recipient.isEmpty() || deviceMacAddress.isEmpty()) {
+                            return;
+                        }
+
+                        Log.d(TAG, "recipient[3:]:    " + recipient.substring(3));
+                        Log.d(TAG, "myMacAddress[3:]: " + deviceMacAddress.substring(3));
+                        // From the article: the first two characters of a MAC address may change
+                        // for the same device and same network interface, and should  be ignored.
+                        // TODO: for now, the GO won't display the messages since its macAddress is empty
+                        if (recipient.substring(3)
+                                .equals(deviceMacAddress.substring(3))) {
+                            // The message is for this device
+                            getMessageTextUiCallback().updateMessageTextUiCallback((String) meshMsg.getData());
+                        }
+                        break;
+                    case CLIENT_LIST:
+                        // NOTE: this case is used mostly by the Client devices. Routers
+                        //  update their list differently
+                        Log.d(TAG, "Updating the client list UI");
+                        /// testing
+//                                HashMap<String, MeshDevice> groupClients = (HashMap<String, MeshDevice>) (meshMsg.getData());
+                        ArrayList<MeshDevice> groupClients = (ArrayList<MeshDevice>) (meshMsg.getData());
+                        ///
+                        Log.d(TAG, "Received clients: " + groupClients);
+                        getClientListUiCallback().updateClientsUi(groupClients);
+                        break;
+                }
+                break;
+            case ThreadMessageTypes.CLIENT_SOCKET_CONNECTION:
+                // This device has established a client socket connection. This is the moment to
+                // to obtain its MAC address
+                Log.d(TAG, " Setting own MAC address based on local IP address");
+                try {
+                    setDeviceMacAddress(WfdNetManagerService.
+                            getMacFromLocalIpAddress(mNetSock.getSocket().getLocalAddress()));
+                    Log.d(TAG, "getMacAddress(): " + getDeviceMacAddress());
+                } catch (SocketException | UnknownHostException e) {
+                    e.printStackTrace();
+                    Log.e(TAG, "Error while trying to obtain the device MAC address");
+                }
+                break;
             default:
                 break;
         }
     }
-
 
     // --------------------------------------------------------------------------------------------
     //  Callbacks / Listeners

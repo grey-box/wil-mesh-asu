@@ -1,7 +1,6 @@
 package com.example.greybox;
 
 import android.os.Handler;
-import android.renderscript.ScriptGroup;
 import android.util.Log;
 
 import java.io.Closeable;

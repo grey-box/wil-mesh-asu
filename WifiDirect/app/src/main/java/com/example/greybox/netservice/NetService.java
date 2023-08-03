@@ -1,6 +1,5 @@
 package com.example.greybox.netservice;
 
-import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pGroup;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Handler;
@@ -10,8 +9,7 @@ import com.example.greybox.MeshDevice;
 import com.example.greybox.WfdNetManagerService;
 import com.example.greybox.meshmessage.MeshMessage;
 
-import java.util.Collection;
-import java.util.HashMap;
+import java.util.ArrayList;
 
 public abstract class NetService {
 
@@ -23,17 +21,28 @@ public abstract class NetService {
     protected WifiP2pManager.GroupInfoListener groupInfoListener;
     protected ClientListUiCallback clientListUiCallback;
     protected GroupInfoUiCallback groupInfoUiCallback;
+    protected MessageTextUiCallback messageTextUiCallback;
+    // TODO: determine if this attribute should be here
+    // This attribute will be set when the socket connection is established
+    protected String deviceMacAddress = "";
 
 
     // --------------------------------------------------------------------------------------------
     //  Interfaces
     // --------------------------------------------------------------------------------------------
     public interface ClientListUiCallback {
-        void updateClientsUi(HashMap<String, MeshDevice> clients);
+        /// testing
+//        void updateClientsUi(HashMap<String, MeshDevice> clients);
+        void updateClientsUi(ArrayList<MeshDevice> clients);
+        ///
     }
 
     public interface GroupInfoUiCallback {
         void updateGroupInfoUi(WifiP2pGroup wifiP2pGroup);
+    }
+
+    public interface MessageTextUiCallback {
+        void updateMessageTextUiCallback(String msgText);
     }
 
 
@@ -66,6 +75,10 @@ public abstract class NetService {
 
     public GroupInfoUiCallback getGroupInfoUiCallback() { return groupInfoUiCallback; }
 
+    public MessageTextUiCallback getMessageTextUiCallback() { return messageTextUiCallback; }
+
+    public String getDeviceMacAddress() { return this.deviceMacAddress; }
+
 
     public void setConnectionInfoListener(WifiP2pManager.ConnectionInfoListener listener) { this.connectionInfoListener = listener; };
 
@@ -74,6 +87,10 @@ public abstract class NetService {
     public void setClientListUiUpdateCallback(ClientListUiCallback cb) { this.clientListUiCallback = cb; }
 
     public void setGroupInfoUiCallback(GroupInfoUiCallback cb) { this.groupInfoUiCallback = cb; }
+
+    public void setMessageTextUiCallback(MessageTextUiCallback cb) { this.messageTextUiCallback = cb; }
+
+    public void setDeviceMacAddress(String deviceMacAddress) { this.deviceMacAddress = deviceMacAddress; }
 
     // --------------------------------------------------------------------------------------------
     //  Abstract methods
@@ -84,8 +101,6 @@ public abstract class NetService {
     public abstract void destroy();
 
     public abstract void sendMessage(MeshMessage msg);
-
-//    public abstract void updateClientsList(Collection<WifiP2pDevice> newList);
 
     public abstract void handleThreadMessage(Message msg);
 }

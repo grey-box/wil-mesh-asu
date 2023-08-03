@@ -1,10 +1,10 @@
 package com.example.greybox.netservice;
 
 import android.os.Handler;
-import android.os.SystemClock;
 import android.util.Log;
 
 import com.example.greybox.ObjectSocketCommunication;
+import com.example.greybox.WfdNetManagerService;
 import com.example.greybox.meshmessage.MeshMessage;
 
 import java.io.IOException;
@@ -55,6 +55,8 @@ public class MClientNetSockModule implements Runnable {
             Log.d(TAG, "  getInetAddress:        " + socket.getInetAddress());  // Returns the address to which the socket is connected.
             Log.d(TAG, "  getLocalAddress:       " + socket.getLocalAddress());   // Gets the local address to which the socket is bound.
             Log.d(TAG, "  getLocalSocketAddress: " + socket.getLocalSocketAddress()); // Returns the address of the endpoint this socket is bound to.
+            Log.d(TAG, "  MAC address:           " + WfdNetManagerService.getMacFromLocalIpAddress(socket.getLocalAddress()));
+
         } catch (IOException e) {
             Log.e(TAG, "Error during connection.");
             closeSocket();
@@ -83,5 +85,7 @@ public class MClientNetSockModule implements Runnable {
             Log.e(TAG, "Error while closing client socket", e);
         }
     }
+
+    public Socket getSocket() { return socket; }
     ////
 }

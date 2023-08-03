@@ -1,7 +1,5 @@
 package com.example.greybox;
 
-import androidx.annotation.NonNull;
-import androidx.fragment.app.FragmentActivity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.IntentFilter;
@@ -13,7 +11,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.os.StrictMode;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -24,21 +21,23 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.fragment.app.FragmentActivity;
+
+import com.example.greybox.meshmessage.MeshMessage;
+import com.example.greybox.meshmessage.MeshMessageType;
+import com.example.greybox.netservice.MClientService;
+import com.example.greybox.netservice.MRouterService;
+import com.example.greybox.netservice.NetService;
+
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import com.example.greybox.meshmessage.MeshMessage;
-import com.example.greybox.meshmessage.MeshMessageType;
-import com.example.greybox.netservice.MClientService;
-import com.example.greybox.netservice.MRouterService;
-import com.example.greybox.netservice.NetService;
 
 /*
     JSGARVEY 03/03/23 - US#206 Citations:
@@ -100,6 +99,22 @@ public class MainActivity extends FragmentActivity {
 //                .build());
         ///
         super.onCreate(savedInstanceState);
+
+        /// TODO: Temp. Information about the current build, extracted from system properties.
+        // NOTE: do we set some of these properties when building the app?
+        Log.d(TAG, "Build.BOARD:    " + Build.BOARD);
+        Log.d(TAG, "Build.BRAND:    " + Build.BRAND);
+        Log.d(TAG, "Build.DEVICE:   " + Build.DEVICE);
+        Log.d(TAG, "Build.DISPLAY:  " + Build.DISPLAY);
+        Log.d(TAG, "Build.HARDWARE: " + Build.HARDWARE);
+        Log.d(TAG, "Build.HOST:     " + Build.HOST);
+        Log.d(TAG, "Build.ID:       " + Build.ID);
+        Log.d(TAG, "Build.MANUFACTURER: " + Build.MANUFACTURER);
+        Log.d(TAG, "Build.MODEL:    " + Build.MODEL);
+        Log.d(TAG, "Build.PRODUCT:  " + Build.PRODUCT);
+        Log.d(TAG, "Build.USER:  " + Build.USER);
+        ///
+
         // call a the layout resource defining the UI
         setContentView(R.layout.activity_main);
         //pop up notifying if device supports wifi p2p
@@ -155,40 +170,35 @@ public class MainActivity extends FragmentActivity {
                         MeshMessage meshMsg = (MeshMessage) message.obj;
 
                         switch (meshMsg.getMsgType()) {
-                            case DATA_SINGLE_CLIENT:
-                                // TODO: for now we assume only strings are sent as the payload
-                                Log.d(TAG, "Displaying the message on UI.");
-                                Log.d(TAG, "dstDevices: \n" + meshMsg.getDstDevices());
-                                read_msg_box.setText((String) meshMsg.getData());
-                                break;
+                            // Just to indicate the type of messages we want the NetService to handle
                             case CLIENT_LIST:
-                                // NOTE: this case is used mostly by the Client devices. Routers
-                                //  update their list differently
-                                Log.d(TAG, "Updating the client list UI");
-                                HashMap<String, MeshDevice> groupClients = (HashMap<String, MeshDevice>) (meshMsg.getData());
-                                Log.d(TAG, "Received clients: " + groupClients);
-                                updateClientsListCallback.updateClientsUi(groupClients);
+                            case DATA_SINGLE_CLIENT:
+                            default:
+                                // Let the NetService to handle the message
+                                mNetService.handleThreadMessage(message);
                                 break;
                         }
+                        break;
 
-                        return true;
-
+                    // TODO: Maybe this type won't be necessary after all
                     case ThreadMessageTypes.MESSAGE_WRITTEN:
-                        return true;
+                        break;
 
                     case ThreadMessageTypes.SOCKET_DISCONNECTION:
                         ObjectSocketCommunication sc = (ObjectSocketCommunication) message.obj;
                         Log.d(TAG, "Disconnecting SocketCommunication");
                         sc.close();
-                        return true;
+                        break;
 
+                    // Just to indicate the type of messages we want the NetService to handle
+                    case ThreadMessageTypes.CLIENT_SOCKET_CONNECTION:
                     default:
                         // NOTE: CLIENT_SOCKET_CONNECTION is handled by the NetService.
                         //  Router must build and send a list to the clients. Nothing to do for Clients
                         mNetService.handleThreadMessage(message);
-                        return false;
+                        break;
                 }
-
+                return true;
             }
         });
 
@@ -196,11 +206,11 @@ public class MainActivity extends FragmentActivity {
         // TODO: determine if only UNI devices will be Group Owners, so far, the answer is YES.
         if (Build.MODEL.equals("MBOX")) {
             mNetService = new MRouterService(wfdNetManagerService, uiHandler);
-            // TODO: this callback should be shared, but this is for testing one element at a time
-//            ((MRouterService)mNetService).setClientListUiUpdateCallback(updateClientsListCallback);
         } else {
             mNetService = new MClientService(wfdNetManagerService, uiHandler);
         }
+        myMacAddress = WfdNetManagerService.getDeviceMacAddress();
+        Log.d(TAG, "MAC Address: " + myMacAddress);
         ///
     }
 
@@ -209,6 +219,7 @@ public class MainActivity extends FragmentActivity {
 
         mNetService.setClientListUiUpdateCallback(updateClientsListCallback);
         mNetService.setGroupInfoUiCallback(groupInfoUiCallback);
+        mNetService.setMessageTextUiCallback(messageTextUiCallback);
 
         btnGroupInfo.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -297,20 +308,23 @@ public class MainActivity extends FragmentActivity {
                 String msg = writeMsg.getText().toString();
 
                 ExecutorService executor = Executors.newSingleThreadExecutor();
-                executor.execute(() -> {
-                    if (msg.isEmpty()) {
-                        Log.i(TAG, "Empty message.");
-                        return;
+                executor.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (msg.isEmpty()) {
+                            Log.i(TAG, "Empty message.");
+                            return;
+                        }
+
+                        // TODO: right now we only support one destination device
+                        ArrayList<String> dstList = new ArrayList<>(1);
+                        dstList.add(msgDstDevice.macAddress);
+
+                        MeshMessage meshMessage = new MeshMessage(MeshMessageType.DATA_SINGLE_CLIENT,
+                                msg,
+                                dstList);
+                        mNetService.sendMessage(meshMessage);
                     }
-
-                    // TODO: right now we only support one destination device
-                    ArrayList<String> dstList = new ArrayList<>(1);
-                    dstList.add(msgDstDevice.macAddress);
-
-                    MeshMessage meshMessage = new MeshMessage(MeshMessageType.DATA_SINGLE_CLIENT,
-                            msg,
-                            dstList);
-                    mNetService.sendMessage(meshMessage);
                 });
             }
         });
@@ -328,11 +342,17 @@ public class MainActivity extends FragmentActivity {
     // TODO: this will be used also by the ClientService, so, change the name
      NetService.ClientListUiCallback updateClientsListCallback = new NetService.ClientListUiCallback() {
         @Override
-        public void updateClientsUi(HashMap<String, MeshDevice> clients) {
+        /// testing
+//        public void updateClientsUi(HashMap<String, MeshDevice> clients) {
+        public void updateClientsUi(ArrayList<MeshDevice> clients) {
+        ///
             Log.d(TAG, "Updating client list");
             Log.d(TAG, "List of clients received: " + clients);
             groupClientsList.clear();
-            groupClientsList.addAll(new ArrayList<>(clients.values()));
+            /// testing
+//            groupClientsList.addAll(new ArrayList<>(clients.values()));
+            groupClientsList.addAll(new ArrayList<>(clients));
+            ///
 
             //store peers list device names to be display and add to device array to be selected
             groupClientsNames = new String[clients.size()];
@@ -375,6 +395,13 @@ public class MainActivity extends FragmentActivity {
 
             Log.d(TAG, " read_msg_box: " + stringBuilder);
             read_msg_box.setText(stringBuilder.toString());
+        }
+    };
+
+    NetService.MessageTextUiCallback messageTextUiCallback = new NetService.MessageTextUiCallback() {
+        @Override
+        public void updateMessageTextUiCallback(String msgText) {
+            read_msg_box.setText(msgText);
         }
     };
     ///
