@@ -36,7 +36,6 @@ public class WfdNetManagerService {
 //    final static String WIRELESS_INTERFACE_NAME = "wlan0";  // This interface gives us a different MAC from the used in WiFi Direct
     final static String WIFI_P2P_INTERFACE_NAME = "p2p";    // Will be used with "String.contains()" since varies depending on the device
     ///
-    public String deviceMacAddress;
 
     /// TODO: we still have a dependency on this value. It's used to restart the service discovery
     //   manually (pressing the DISCOVER button) when the connection was not established automatically
@@ -79,16 +78,6 @@ public class WfdNetManagerService {
 
         creationRetriesLeft--;
 
-        // Try to get the MAC address since the beginning
-        if (deviceMacAddress == null) {
-            deviceMacAddress = getDeviceMacAddress();
-        }
-
-        if (deviceMacAddress.isEmpty()) {
-            Log.e(TAG, "Failed to obtain the MAC address. Auto-connect won't work. Aborting.");
-            return;
-        }
-
         // Builder used to build WifiP2pConfig objects for creating or joining a group.
         WifiP2pConfig.Builder configBuilder = new WifiP2pConfig.Builder();
 
@@ -123,15 +112,9 @@ public class WfdNetManagerService {
         // Map is an ADT whereas HashMap is an implementation of Map
         Map<String, String> record = new HashMap<>();
 
-        // TODO: encrypt MAC address
-        // Encryption of the MAC address
-        String enMac = deviceMacAddress;
-        //
-
         Log.d(TAG, " Creting the record.");
 
         // TODO: The article suggests to concatenate the whole info, I guess that would be more secure
-        record.put("mac", enMac);
         record.put("ssid", enSSID);
         record.put("pass", enPass);
         record.put("port", String.valueOf(SERVER_PORT));
