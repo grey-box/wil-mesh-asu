@@ -36,6 +36,7 @@ import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -75,7 +76,7 @@ public class MainActivity extends FragmentActivity {
     ///
     Handler uiHandler;
     /// PE_MSG_SPECIFIC_CLIENTS
-    private MeshDevice msgDstDevice = new MeshDevice("", "");        // Destination device of the message
+    private MeshDevice msgDstDevice;        // Destination device of the message
     private ArrayList<MeshDevice> groupClientsList = new ArrayList<>();  // List of the connected devices in the group. Used to get the MAC address
     private String[] groupClientsNames;     // List of devices names to be displayed on the UI
     private String myMacAddress = "";
@@ -152,6 +153,8 @@ public class MainActivity extends FragmentActivity {
         mIntentFilter = new IntentFilter();
         // indicates the state of Wifi P2P connectivity has changed
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
+        // TODO: This might be used to obtain the device name, but our current approach is to use bluetooth name
+        mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
 
         /// PE_AUTO_CONNECT
@@ -205,12 +208,10 @@ public class MainActivity extends FragmentActivity {
         // TODO: need a better way to create the group only if the device is a UNI device.
         // TODO: determine if only UNI devices will be Group Owners, so far, the answer is YES.
         if (Build.MODEL.equals("MBOX")) {
-            mNetService = new MRouterService(wfdNetManagerService, uiHandler);
+            mNetService = new MRouterService(getApplicationContext(), wfdNetManagerService, uiHandler);
         } else {
-            mNetService = new MClientService(wfdNetManagerService, uiHandler);
+            mNetService = new MClientService(getApplicationContext(), wfdNetManagerService, uiHandler);
         }
-        myMacAddress = WfdNetManagerService.getDeviceMacAddress();
-        Log.d(TAG, "MAC Address: " + myMacAddress);
         ///
     }
 
@@ -317,8 +318,8 @@ public class MainActivity extends FragmentActivity {
                         }
 
                         // TODO: right now we only support one destination device
-                        ArrayList<String> dstList = new ArrayList<>(1);
-                        dstList.add(msgDstDevice.macAddress);
+                        ArrayList<UUID> dstList = new ArrayList<>(1);
+                        dstList.add(msgDstDevice.getDeviceId());
 
                         MeshMessage meshMessage = new MeshMessage(MeshMessageType.DATA_SINGLE_CLIENT,
                                 msg,
@@ -339,7 +340,6 @@ public class MainActivity extends FragmentActivity {
      * their related UI view, given that with the automatic connection feature we no longer use the
      * peerList to display the possible peers
      */
-    // TODO: this will be used also by the ClientService, so, change the name
      NetService.ClientListUiCallback updateClientsListCallback = new NetService.ClientListUiCallback() {
         @Override
         /// testing
@@ -360,9 +360,10 @@ public class MainActivity extends FragmentActivity {
 
             // Append " : GO" to the name if the device is a GO.
             for (int i = 0; i < clients.size(); ++i) {
-                groupClientsNames[i] = groupClientsList.get(i).isGo ?
-                        groupClientsList.get(i).name + " : GO" :
-                        groupClientsList.get(i).name;
+                groupClientsNames[i] = groupClientsList.get(i).getDeviceName() + " - " + groupClientsList.get(i).getDeviceId();
+                if (groupClientsList.get(i).isGo()) {
+                    groupClientsNames[i] += " - GO";
+                }
             }
 
             // TODO: RecyclerView is now preferred instead of ListView.
@@ -450,7 +451,7 @@ public class MainActivity extends FragmentActivity {
 //        nsdHelper.tearDown();
 //        connection.tearDown();
 
-        mNetService.destroy();
+        mNetService.stop();
 //        wfdNetManagerService.tearDown();
         mChannel.close();
         super.onDestroy();

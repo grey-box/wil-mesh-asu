@@ -191,6 +191,10 @@ public class WfdNetManagerService {
 
 
     /// PE_MSG_SPECIFIC_CLIENT
+    // TODO: consider removing all these methods related to the MAC address. Now, we are not using
+    //  the MAC address to identify the devices. We create our own ID using UUID.randomUUID() in the
+    //  NetService constructor
+
     // Helper methods. From https://www.baeldung.com/java-mac-address
     private static String macBytesToString(byte[] hardwareAddress) {
         String[] hexadecimal = new String[hardwareAddress.length];

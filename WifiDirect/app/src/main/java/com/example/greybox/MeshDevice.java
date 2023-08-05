@@ -1,5 +1,6 @@
 package com.example.greybox;
 
+import android.provider.Settings;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -7,51 +8,35 @@ import androidx.annotation.NonNull;
 import java.io.Serializable;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.util.UUID;
 
 // TODO: how to deal with many groups? Maybe a client sends it to its GO, and the GO decides if
 //  it should send it to all other GOs he reaches to, and those GO will evaluate if they have access
 //  to the desired client or if it repeats the process.
-
-// TODO: we should model the roles of GroupOwner and Client. Maybe with interfaces.
-//  These interfaces should be implemented by a class that maybe inherits from MeshDevice.
-//  The GroupOwner interface should have the methods to notify clients of some event.
 public class MeshDevice implements Serializable {
     private static final String TAG = "MeshDevice";
 
-    public String macAddress;
-//    public String localIpAddress;
-    public String name = "";
-    public ObjectSocketCommunication socketComm = null;   // TODO: we now use ObjectSocketCommunication.
-    public boolean isGo = false;
+    private UUID deviceId;
+    private String deviceName = "";
+    private ObjectSocketCommunication socketComm = null;   // TODO: we now use ObjectSocketCommunication.
+    private boolean isGo = false;
 
     // --------------------------------------------------------------------------------------------
     //  Constructors
     // --------------------------------------------------------------------------------------------
-    public MeshDevice(String macAddress, String name, ObjectSocketCommunication sc) {
-        this.macAddress = macAddress;
-//        this.localIpAddress = localIpAddress;
-        this.name = name;
-        this.socketComm = sc;
+    public MeshDevice(UUID deviceId) {
+        this.deviceId = deviceId;
     }
 
-    public MeshDevice(ObjectSocketCommunication sc) {
-        this.socketComm = sc;
-        Log.d(TAG, " socketComm: " + sc);
-        Log.d(TAG, " socketComm.socket: " + sc.getSocket());
-        Log.d(TAG, " getLocalAddress: " + sc.getSocket().getLocalAddress());
-        try {
-            this.macAddress = WfdNetManagerService.getMacFromLocalIpAddress(sc.getSocket().getLocalAddress());
-            Log.d(TAG, " macAddress: " + this.macAddress);
-        } catch (UnknownHostException | SocketException e) {
-            Log.e(TAG, "Couldn't get the MAC address from local IPAddress", e);
-            throw new RuntimeException(e);
-        }
+    public MeshDevice(UUID deviceId, String deviceName) {
+        this.deviceId = deviceId;
+        this.deviceName = deviceName;
     }
 
-    public MeshDevice(String macAddress, String name) {
-        this.macAddress = macAddress;
-//        this.localIpAddress = localIpAddress;
-        this.name = name;
+    public MeshDevice(UUID deviceId, String deviceName, ObjectSocketCommunication sc) {
+        this.deviceId = deviceId;
+        this.deviceName = deviceName;
+        this.socketComm = sc;
     }
 
     // --------------------------------------------------------------------------------------------
@@ -61,9 +46,29 @@ public class MeshDevice implements Serializable {
     @Override
     public String toString() {
         return "MeshDevice" +
-                "  macAddress: " + macAddress +
-                "  name: " + name +
-                "  socketComm: " + socketComm +
-                "  isGo: " + isGo;
+                "\n deviceId:   " + deviceId +
+                "\n deviceName: " + deviceName +
+                "\n socketComm: " + socketComm +
+                "\n isGo:       " + isGo;
+    }
+
+    public UUID getDeviceId() {
+        return deviceId;
+    }
+
+    public String getDeviceName() {
+        return deviceName;
+    }
+
+    public ObjectSocketCommunication getSocketComm() {
+        return socketComm;
+    }
+
+    public boolean isGo() {
+        return isGo;
+    }
+
+    public void setDeviceName(String deviceName) {
+        this.deviceName = deviceName;
     }
 }

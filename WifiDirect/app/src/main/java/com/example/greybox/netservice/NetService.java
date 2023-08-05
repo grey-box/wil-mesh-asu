@@ -1,30 +1,33 @@
 package com.example.greybox.netservice;
 
+import android.content.Context;
 import android.net.wifi.p2p.WifiP2pGroup;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Handler;
 import android.os.Message;
+import android.provider.Settings;
+import android.util.Log;
 
 import com.example.greybox.MeshDevice;
 import com.example.greybox.WfdNetManagerService;
 import com.example.greybox.meshmessage.MeshMessage;
 
 import java.util.ArrayList;
+import java.util.UUID;
 
 public abstract class NetService {
+    private static final String TAG = "NetService";
 
 //    private MCWfdModule mWfdModule;
     // TODO: still not sure if we have to split the behavior of WfdNetManagerService in Router/Client
-    protected final WfdNetManagerService wfdModule;
-    protected final Handler externalHandler;
+    protected WfdNetManagerService wfdModule;
+    protected Handler externalHandler;
     protected WifiP2pManager.ConnectionInfoListener connectionInfoListener;
     protected WifiP2pManager.GroupInfoListener groupInfoListener;
     protected ClientListUiCallback clientListUiCallback;
     protected GroupInfoUiCallback groupInfoUiCallback;
     protected MessageTextUiCallback messageTextUiCallback;
-    // TODO: determine if this attribute should be here
-    // This attribute will be set when the socket connection is established
-    protected String deviceMacAddress = "";
+    private MeshDevice device;  // The representation of the device this NetService is running on
 
 
     // --------------------------------------------------------------------------------------------
@@ -49,9 +52,14 @@ public abstract class NetService {
     // --------------------------------------------------------------------------------------------
     //  Constructors
     // --------------------------------------------------------------------------------------------
-    protected NetService(WfdNetManagerService wfdModule, Handler externalHandler) {
+    protected NetService(Context context, WfdNetManagerService wfdModule, Handler externalHandler) {
         this.externalHandler = externalHandler;
         this.wfdModule = wfdModule;
+        this.device = new MeshDevice(UUID.randomUUID());
+        // TODO: this method might not work and maybe we have to use the WifiP2pDevice info in the
+        //  WifiDirectBroadcastReceiver class when processing WIFI_P2P_THIS_DEVICE_CHANGED_ACTION
+        this.device.setDeviceName(Settings.Secure.getString(context.getContentResolver(), "bluetooth_name"));
+        Log.d(TAG, " deviceName: " + this.device.getDeviceName());
     }
 
     // --------------------------------------------------------------------------------------------
@@ -77,7 +85,7 @@ public abstract class NetService {
 
     public MessageTextUiCallback getMessageTextUiCallback() { return messageTextUiCallback; }
 
-    public String getDeviceMacAddress() { return this.deviceMacAddress; }
+    public MeshDevice getDevice() { return this.device; }
 
 
     public void setConnectionInfoListener(WifiP2pManager.ConnectionInfoListener listener) { this.connectionInfoListener = listener; };
@@ -90,15 +98,12 @@ public abstract class NetService {
 
     public void setMessageTextUiCallback(MessageTextUiCallback cb) { this.messageTextUiCallback = cb; }
 
-    public void setDeviceMacAddress(String deviceMacAddress) { this.deviceMacAddress = deviceMacAddress; }
-
     // --------------------------------------------------------------------------------------------
     //  Abstract methods
     // --------------------------------------------------------------------------------------------
     public abstract void start();
 
-    // TODO: maybe this name is not appropriate.
-    public abstract void destroy();
+    public abstract void stop();
 
     public abstract void sendMessage(MeshMessage msg);
 

@@ -59,8 +59,9 @@ public class ObjectSocketCommunication implements Runnable {
 
 
         /// PE_MSG_SPECIFIC_CLIENTS
-        // TODO: we must send a notification so the UI and MRouterService do their actions like
-        //  sending the list of clients to the clients and update the UI. MClientService just ignores it
+        // NOTE: Unfortunately, this is action is only meant for clients. CLIENT_SOCKET_CONNECTION
+        //  indicates the client to send its info to the GO so it can update the list of clients
+        //  and then broadcast it to other clients
         handler.obtainMessage(ThreadMessageTypes.CLIENT_SOCKET_CONNECTION, this).sendToTarget();
         ///
 
@@ -94,6 +95,12 @@ public class ObjectSocketCommunication implements Runnable {
                 try {
                     Log.d(TAG, "Writing message: " + msg);
                     Log.d(TAG, " objectOutputStream: " + objectOutputStream);
+                    // Prevent using back references: https://stackoverflow.com/questions/12341086/java-socket-serialization-object-wont-update
+                    // If we don't call reset(), only the most recently connected device will get the
+                    // complete list of clients
+                    // NOTE: the pair ObjectOutputStream.writeUnshared() and ObjectInputStream.readUnshared()
+                    //  didn't prevent this issue.
+                    objectOutputStream.reset();
                     objectOutputStream.writeObject(msg);
                 } catch (IOException e) {
                     Log.e(TAG, "Exception while writing to output stream.", e);

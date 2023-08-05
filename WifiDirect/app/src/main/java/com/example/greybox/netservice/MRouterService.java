@@ -1,5 +1,6 @@
 package com.example.greybox.netservice;
 
+import android.content.Context;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pGroup;
 import android.net.wifi.p2p.WifiP2pInfo;
@@ -7,6 +8,8 @@ import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+
+import androidx.annotation.Nullable;
 
 import com.example.greybox.MeshDevice;
 import com.example.greybox.ThreadMessageTypes;
@@ -16,11 +19,10 @@ import com.example.greybox.meshmessage.MeshMessage;
 import com.example.greybox.meshmessage.MeshMessageType;
 
 import java.net.InetAddress;
-import java.net.SocketException;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -31,18 +33,15 @@ public class MRouterService extends NetService {
     private MRouterNetSockModule mNetSock;
 
     /// PE_MSG_SPECIFIC_CLIENT
-    /// testing
 //    HashMap<String, MeshDevice> groupClients = new HashMap<>();
     ArrayList<MeshDevice> groupClients = new ArrayList<>();
-    ////
     ///
 
     // --------------------------------------------------------------------------------------------
     //  Constructors
     // --------------------------------------------------------------------------------------------
-    public MRouterService(WfdNetManagerService wfd, Handler handler) {
-        super(wfd, handler);
-        Log.d(TAG, "handler: " + handler);
+    public MRouterService(Context context, WfdNetManagerService wfd, Handler handler) {
+        super(context, wfd, handler);
     }
 
 
@@ -61,7 +60,7 @@ public class MRouterService extends NetService {
 
     // TODO: maybe this name is not appropriate
     @Override
-    public void destroy() {
+    public void stop() {
         mNetSock.closeServerSocket();
     }
 
@@ -72,30 +71,26 @@ public class MRouterService extends NetService {
 
 
     /// PE_MSG_SPECIFIC_CLIENT
-    private HashMap<String, MeshDevice> buildMeshDeviceClientList(Collection<WifiP2pDevice> list) {
-        HashMap<String, MeshDevice> clients = new HashMap<>(list.size());
-        for (WifiP2pDevice d : list) {
-            clients.put(d.deviceName, new MeshDevice(d.deviceAddress, d.deviceName));
-        }
-        return clients;
+    private void addClient(MeshDevice newClient) {
+        Log.d(TAG, "addClient");
+        Log.d(TAG, " newClient: " + newClient);
+        groupClients.add(newClient);
     }
 
-    /// testing
-    private void updateClientsList(Collection<WifiP2pDevice> list) {
-        groupClients.clear();
-        for (WifiP2pDevice d : list) {
-            groupClients.add(new MeshDevice(d.deviceAddress, d.deviceName));
+    private void removeClient(MeshDevice client) {
+        Log.d(TAG, "removeClient");
+//        groupClients.remove(client);
+        for (int i = 0; i < groupClients.size(); ++i) {
+            if (groupClients.get(i)
+                    .getDeviceId().equals(client.getDeviceId())) {
+                groupClients.remove(i);
+                return;
+            }
         }
     }
-
-    //    public void updateClientsList(Collection<WifiP2pDevice> newList) {
-//        groupClients.clear();
-//        groupClients.putAll(buildMeshDeviceClientList(newList));
-//        Log.d(TAG, "New client list: " + groupClients);
-//    }
-    ///
 
     private void notifyClients() {
+        Log.d(TAG, "notifyClients");
         Log.d(TAG, " Clients that would be sent:\n" + groupClients);
         MeshMessage msg = new MeshMessage(MeshMessageType.CLIENT_LIST, groupClients, null);
         mNetSock.write(msg);
@@ -107,16 +102,32 @@ public class MRouterService extends NetService {
     }
 
     @Override
-    public void handleThreadMessage(Message msg) {
+    public void handleThreadMessage(Message threadMsg) {
         Log.d(TAG, "Message processed by the RouterService");
-        switch (msg.what) {
+
+        switch (threadMsg.what) {
             case ThreadMessageTypes.MESSAGE_READ:
-                // This message requests display in the UI the data received from another
-                // device
+                Log.d(TAG, " ThreadMessageTypes.MESSAGE_READ");
+                if (threadMsg.obj == null) {
+                    Log.d(TAG, " threadMsg.obj is null");
+                    return;
+                }
+                // This message requests display in the UI the data received from another device
                 // The object received is a MeshMessage object
-                MeshMessage meshMsg = (MeshMessage) msg.obj;
+                MeshMessage meshMsg = (MeshMessage) threadMsg.obj;
 
                 switch (meshMsg.getMsgType()) {
+                    case NEW_CLIENT_SOCKET_CONNECTION:
+                        // A client socket connection received. Update the list of clients and then
+                        // send it to the other clients
+                        Log.d(TAG, "CLIENT_SOCKET_CONNECTION");
+
+                        addClient((MeshDevice) meshMsg.getData());
+                        /// PE_MSG_SPECIFIC_CLIENT
+                        notifyClients();
+                        updateClientListUi();
+                        ///
+                        break;
                     // TODO: for this case we could use the template method design pattern since it's
                     //  almost identical for the Client and the GO
                     case DATA_SINGLE_CLIENT:
@@ -125,20 +136,15 @@ public class MRouterService extends NetService {
                         Log.d(TAG, "dstDevices: \n" + meshMsg.getDstDevices());
 
                         // We currently support only one recipient
-                        String recipient = meshMsg.getDstDevices().get(0);
-                        Log.d(TAG, "recipient: \n" + recipient);
+                        UUID recipientId = meshMsg.getDstDevices().get(0);
+                        Log.d(TAG, "  recipientId: " + recipientId);
 
-                        if (recipient.isEmpty() || deviceMacAddress.isEmpty()) {
+                        if (recipientId == null) {
                             return;
                         }
 
-                        Log.d(TAG, "recipient[3:]:    " + recipient.substring(3));
-                        Log.d(TAG, "myMacAddress[3:]: " + deviceMacAddress.substring(3));
-                        // From the article: the first two characters of a MAC address may change
-                        // for the same device and same network interface, and should  be ignored.
-                        // TODO: for now, the GO won't display the messages since its macAddress is empty
-                        if (recipient.substring(3)
-                                .equals(deviceMacAddress.substring(3))) {
+                        Log.d(TAG, "  deviceId:    " + getDevice().getDeviceId());
+                        if (recipientId.equals(getDevice().getDeviceId())) {
                             // The message is for this device
                             getMessageTextUiCallback().updateMessageTextUiCallback((String) meshMsg.getData());
                         } else {
@@ -148,7 +154,7 @@ public class MRouterService extends NetService {
                         }
                         break;
                     case CLIENT_LIST:
-                        // The GO updates the list of devices in ThreadMessageTypes.CLIENT_SOCKET_CONNECTION.
+                        // The GO updates the list of devices in NEW_CLIENT_SOCKET_CONNECTION.
                         // TODO: maybe this will change if we receive the list of another group
                         break;
                     default:
@@ -157,14 +163,10 @@ public class MRouterService extends NetService {
                 break;
 
             case ThreadMessageTypes.CLIENT_SOCKET_CONNECTION:
-                // A client socket connection received. This is the moment to call the update of
-                // the client list
-                Log.d(TAG, "Received CLIENT_DEVICE");
                 /// PE_MSG_SPECIFIC_CLIENT
-                notifyClients();
-                updateClientListUi();
+                // GO doesn't do anything for this type of message. The data will be received as a
+                //  MeshMessage and processed in NEW_CLIENT_SOCKET_CONNECTION
                 ///
-                break;
             default:
                 break;
         }
@@ -214,17 +216,6 @@ public class MRouterService extends NetService {
             if (mNetSock == null) {
                 // Create a ServerSocket
                 mNetSock = new MRouterNetSockModule(externalHandler, PORT);
-
-                // This is the time to set the device MAC address
-                try {
-                    Log.d(TAG, " Setting own MAC address based on local IP address");
-                    setDeviceMacAddress(WfdNetManagerService.
-                            getMacFromLocalIpAddress(groupOwnerAddress));
-                    Log.d(TAG, "getMacAddress(): " + getDeviceMacAddress());
-                } catch (SocketException | UnknownHostException e) {
-                    e.printStackTrace();
-                    Log.e(TAG, "Error while trying to obtain the device MAC address");
-                }
             }
 
             // One thread to wait for each possible client
@@ -261,15 +252,21 @@ public class MRouterService extends NetService {
             Log.d(TAG, "Client list:\n--------");
             for (WifiP2pDevice d : wifiP2pGroup.getClientList()) {
                 Log.d(TAG, d.toString());
-//                WfdNetManagerService.getMacFromLocalIpAddress();
             }
             ///
+        }
+    };
 
-            /// PE_MSG_SPECIFIC_CLIENT
-            // TODO: the problem with calling here the update is that the socket connection might
-            //  have failed. We must do something to avoid adding an element that doesn't have a socket
-            updateClientsList(wifiP2pGroup.getClientList());
-            ///
+    // TODO: this listener could be used to obtain the device name. Still evaluating if using the
+    //  current method (bluetooth name obtained in the NetService constructor) is better since we
+    //  avoid async calls that might end up getting an invalid name due to the order of execution
+    WifiP2pManager.DeviceInfoListener deviceInfoListener = new WifiP2pManager.DeviceInfoListener() {
+        @Override
+        public void onDeviceInfoAvailable(@Nullable WifiP2pDevice wifiP2pDevice) {
+            // NOTE: this callback is basically useless. WifiP2pDevice only gives us the name of the
+            //  device, and whether is a group owner. But it won't give us the MAC address.
+            Log.d(TAG, "deviceInfoListener.onDeviceInfoAvailable");
+            Log.d(TAG, " wifiP2pDevice:\n" + wifiP2pDevice);
         }
     };
 }

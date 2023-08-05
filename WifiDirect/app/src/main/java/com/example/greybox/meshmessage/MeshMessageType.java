@@ -8,6 +8,7 @@ public enum MeshMessageType {
     CMD_ALL_NETWORK,
 
     //
+    NEW_CLIENT_SOCKET_CONNECTION,
     CLIENT_LIST,
     //
 }

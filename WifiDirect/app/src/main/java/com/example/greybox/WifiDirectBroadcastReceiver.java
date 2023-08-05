@@ -78,7 +78,19 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
             /// PE_DBG_TMP
             Log.d(TAG, "*** WIFI_P2P_CONNECTION_CHANGED_ACTION end");
             ///
+        } else if (WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)) {
+            /// PE_DBG_TMP
+            Log.d(TAG, "*** WIFI_P2P_THIS_DEVICE_CHANGED_ACTION start");
+            ///
+            // We use this intent to set the name of the own device
+            // TODO: we try to use the bluetooth name in NetService. It's better to avoid an async
+            //  call that can screw up the information, but not sure it will work
+            //            mManager.requestDeviceInfo(mChannel, mNetService.get);
+            /// PE_DBG_TMP
+            Log.d(TAG, "*** WIFI_P2P_THIS_DEVICE_CHANGED_ACTION end");
+            ///
         }
+
     }
 
 
