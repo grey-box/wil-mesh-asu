@@ -62,6 +62,7 @@ public class MClientService extends NetService {
 
     @Override
     public void stop() {
+        if (mNetSock == null) return;
         mNetSock.closeSocket();
     }
 

@@ -1,13 +1,11 @@
 package com.example.greybox;
 
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.IntentFilter;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pGroup;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -16,12 +14,15 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
 import androidx.annotation.NonNull;
+//import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.FragmentActivity;
 
 import com.example.greybox.meshmessage.MeshMessage;
@@ -40,18 +41,22 @@ import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+
 /*
     JSGARVEY 03/03/23 - US#206 Citations:
     https://developer.android.com/training/connect-devices-wirelessly/wifi-direct#create-group
     Sarthi Technology - https://www.youtube.com/playlist?list=PLFh8wpMiEi88SIJ-PnJjDxktry4lgBtN3
  */
 public class MainActivity extends FragmentActivity {
+//public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
 
     Button btnDiscover, btnSend, btnGroupInfo;
     ListView listView;
     TextView read_msg_box, connectionStatus;
     EditText writeMsg;
+    ToggleButton deviceModeToggle;
+    ToggleButton connectToggle;
 
     //Wifi P2p Manager provides specif API for managing WIFI p2p connectivity
     WifiP2pManager mManager;
@@ -61,9 +66,8 @@ public class MainActivity extends FragmentActivity {
     WifiP2pGroup mGroup;
     WifiP2pInfo mWifiP2pInfo;
 
-    //Broadcast Receiver base class for code that receives and handles broadcast
-    // intents sent by the context
-    BroadcastReceiver mReceiver;
+    // receives and handles broadcast intents sent by the context
+    WifiDirectBroadcastReceiver mReceiver;
     // An Intent is a description of an operation to be performed.
     // A filter matches intents and describes the Intent values it matches.
     // Filters by characteristics of intents Actions, Data, and Categories
@@ -81,43 +85,19 @@ public class MainActivity extends FragmentActivity {
     private String[] groupClientsNames;     // List of devices names to be displayed on the UI
     private String myMacAddress = "";
     ///
+    private boolean isAP = false;
+    private boolean isConnected = false;
 
 
     //imported override method onCreate. Initialize the the activity.
     //
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        /// This setup is to provide more information about some problems. It should be used only for debug
-        //  https://stackoverflow.com/questions/56911580/w-system-a-resource-failed-to-call-release
-        //  https://developer.android.com/reference/android/os/StrictMode.html
-//        StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder()
-//                .detectLeakedClosableObjects()
-//                .penaltyLog()
-//                .build());
-//        StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
-//                .detectLeakedClosableObjects()
-//                .penaltyLog()
-//                .build());
-        ///
         super.onCreate(savedInstanceState);
-
-        /// TODO: Temp. Information about the current build, extracted from system properties.
-        // NOTE: do we set some of these properties when building the app?
-        Log.d(TAG, "Build.BOARD:    " + Build.BOARD);
-        Log.d(TAG, "Build.BRAND:    " + Build.BRAND);
-        Log.d(TAG, "Build.DEVICE:   " + Build.DEVICE);
-        Log.d(TAG, "Build.DISPLAY:  " + Build.DISPLAY);
-        Log.d(TAG, "Build.HARDWARE: " + Build.HARDWARE);
-        Log.d(TAG, "Build.HOST:     " + Build.HOST);
-        Log.d(TAG, "Build.ID:       " + Build.ID);
-        Log.d(TAG, "Build.MANUFACTURER: " + Build.MANUFACTURER);
-        Log.d(TAG, "Build.MODEL:    " + Build.MODEL);
-        Log.d(TAG, "Build.PRODUCT:  " + Build.PRODUCT);
-        Log.d(TAG, "Build.USER:  " + Build.USER);
-        ///
 
         // call a the layout resource defining the UI
         setContentView(R.layout.activity_main);
+
         //pop up notifying if device supports wifi p2p
         if(getPackageManager().hasSystemFeature("android.hardware.wifi.direct")){
             Toast.makeText(getApplicationContext(), "WIFI DIRECT SUPPORTED", Toast.LENGTH_SHORT).show();
@@ -126,10 +106,6 @@ public class MainActivity extends FragmentActivity {
         initialization();
         // adding listeners to the objects
         setListeners();
-
-        /// PE_AUTO_CONNECT
-        mNetService.start();
-        ///
     }
 
     // initial work for creating objects from onCreate()
@@ -143,6 +119,16 @@ public class MainActivity extends FragmentActivity {
         read_msg_box= findViewById(R.id.readMsg);
         connectionStatus= findViewById(R.id.connectionStatus);
         writeMsg = findViewById(R.id.writeMsg);
+        deviceModeToggle = findViewById(R.id.deviceModeBtn);
+        connectToggle = findViewById(R.id.connectBtn);
+
+        Log.d(TAG, "btnGroupInfo: "+btnGroupInfo);
+        Log.d(TAG, "btnDiscover: "+btnDiscover);
+        Log.d(TAG, "btnSend: "+btnSend);
+        Log.d(TAG, "listView: "+listView);
+        Log.d(TAG, "read_msg_box: "+read_msg_box);
+        Log.d(TAG, "connectionStatus: "+connectionStatus);
+        Log.d(TAG, "writeMsg: "+writeMsg);
 
         // create wifi p2p manager providing the API for managing Wifi peer-to-peer connectivity
         mManager = (WifiP2pManager) getApplicationContext().getSystemService(Context.WIFI_P2P_SERVICE);
@@ -205,23 +191,44 @@ public class MainActivity extends FragmentActivity {
                 return true;
             }
         });
-
-        // TODO: need a better way to create the group only if the device is a UNI device.
-        // TODO: determine if only UNI devices will be Group Owners, so far, the answer is YES.
-        if (Build.MODEL.equals("MBOX")) {
-            mNetService = new MRouterService(getApplicationContext(), wfdNetManagerService, uiHandler);
-        } else {
-            mNetService = new MClientService(getApplicationContext(), wfdNetManagerService, uiHandler);
-        }
-        ///
     }
 
     // implemented method for app object action listeners
     private void setListeners(){
+        connectToggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    deviceModeToggle.setEnabled(false);
+                    if (isAP) {
+                        mNetService = new MRouterService(getApplicationContext(), wfdNetManagerService, uiHandler);
+                    } else {
+                        mNetService = new MClientService(getApplicationContext(), wfdNetManagerService, uiHandler);
+                    }
 
-        mNetService.setClientListUiUpdateCallback(updateClientsListCallback);
-        mNetService.setGroupInfoUiCallback(groupInfoUiCallback);
-        mNetService.setMessageTextUiCallback(messageTextUiCallback);
+                    mNetService.setClientListUiUpdateCallback(updateClientsListCallback);
+                    mNetService.setGroupInfoUiCallback(groupInfoUiCallback);
+                    mNetService.setMessageTextUiCallback(messageTextUiCallback);
+
+                    // Since we create the WifiDirectBroadcastReceiver before setting mNetService, we
+                    // end up passing a null object. We need to set it here
+                    mReceiver.setNetService(mNetService);
+
+                    mNetService.start();
+                } else {
+                    deviceModeToggle.setEnabled(true);
+                    mNetService.stop();
+                    // TODO: maybe this should be part of mNetService.stop();
+                    wfdNetManagerService.tearDown();
+                    mNetService = null;
+                    mReceiver.setNetService(null);
+                }
+            }
+        });
+        deviceModeToggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                isAP = isChecked;
+            }
+        });
 
         btnGroupInfo.setOnClickListener(new View.OnClickListener() {
             @Override

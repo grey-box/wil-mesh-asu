@@ -61,6 +61,7 @@ public class MRouterService extends NetService {
     // TODO: maybe this name is not appropriate
     @Override
     public void stop() {
+        if (mNetSock == null) return;
         mNetSock.closeServerSocket();
     }
 

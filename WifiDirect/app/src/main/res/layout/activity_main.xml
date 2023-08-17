@@ -5,195 +5,170 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp"
-    android:fillViewport="true"
-    tools:context=".MainActivity">
+    android:fillViewport="true">
+<!--    tools:context=".MainActivity"-->
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-                <ToggleButton
-                    android:id="@+id/connectButton"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/start_app_toggle"
-                    android:textAlignment="center"
-                    android:textColor="@color/background_gradient_end"
-                    android:textSize="20sp"
-                    app:layout_constraintHorizontal_bias="0.5"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintEnd_toStartOf="@+id/modeToggleButton"
-                    app:layout_constraintTop_toTopOf="parent" />
+            <ToggleButton
+                android:id="@+id/connectBtn"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:checked="false"
+                android:text="@string/start_app_toggle"
+                android:textOff="@string/start_app_toggle"
+                android:textOn="@string/stop_app_toggle"
+                android:textAlignment="center"
+                android:textSize="20sp"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintEnd_toStartOf="@+id/deviceModeBtn"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
-                <!--https://github.com/material-components/material-components-android/blob/master/docs/components/Button.md#toggle-button-->
-                <com.google.android.material.button.MaterialButtonToggleGroup
-                    android:id="@+id/modeToggleButton"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    app:layout_constraintStart_toEndOf="@id/connectButton"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    >
-                        <Button
-                            style="?attr/materialButtonOutlinedStyle"
-                            android:id="@+id/client_mode"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:text="@string/client_mode_toggle"
-                            android:textSize="20sp"
-                            android:layout_weight="1"
-                            android:textAlignment="center"
-                            android:textColor="@color/background_gradient_end"
-                            app:layout_constraintHorizontal_bias="0.5"
-                            />
-                        <Button
-                            style="?attr/materialButtonOutlinedStyle"
-                            android:id="@+id/ap_client"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:text="@string/ap_mode_toggle"
-                            android:textSize="20sp"
-                            android:layout_weight="1"
-                            android:textAlignment="center"
-                            android:textColor="@color/background_gradient_end"
-                            app:layout_constraintHorizontal_bias="0.5"
-                            />
-                </com.google.android.material.button.MaterialButtonToggleGroup>
+            <ToggleButton
+                android:id="@+id/deviceModeBtn"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:checked="false"
+                android:text="@string/ap_mode_toggle"
+                android:textOff="@string/client_mode_toggle"
+                android:textOn="@string/ap_mode_toggle"
+                android:textAlignment="center"
+                android:textSize="20sp"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/connectBtn"
+                app:layout_constraintTop_toTopOf="parent" />
 
-                <TextView
-                    android:id="@+id/connectionStatus"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="@string/connection_status_label"
-                    android:textAlignment="center"
-                    android:textColor="@color/background_gradient_end"
-                    android:textSize="20sp"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/connectButton" />
+            <TextView
+                android:id="@+id/connectionStatus"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/connection_status_label"
+                android:textAlignment="center"
+                android:textSize="20sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/connectBtn" />
 
-                <Button
-                    android:id="@+id/discover"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="8dp"
-                    android:layout_weight="1"
-                    android:text="@string/discover_btn"
-                    android:textAlignment="center"
-                    android:textColor="@color/background_gradient_end"
-                    android:textSize="20sp"
-                    app:layout_constraintHorizontal_bias="0.5"
-                    app:layout_constraintStart_toStartOf="@+id/connectionStatus"
-                    app:layout_constraintEnd_toStartOf="@+id/groupInfo"
-                    app:layout_constraintTop_toTopOf="@+id/groupInfo" />
+            <Button
+                android:id="@+id/discover"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="0dp"
+                android:layout_weight="1"
+                android:text="@string/discover_btn"
+                android:textAlignment="center"
+                android:textSize="20sp"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="@id/connectionStatus"
+                app:layout_constraintEnd_toStartOf="@+id/groupInfo"
+                app:layout_constraintTop_toTopOf="@+id/groupInfo" />
 
-                <Button
-                    android:id="@+id/groupInfo"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:layout_weight="1"
-                    android:text="@string/group_info_btn"
-                    android:textAlignment="center"
-                    android:textColor="@color/background_gradient_end"
-                    android:textSize="20sp"
-                    app:layout_constraintHorizontal_bias="0.5"
-                    app:layout_constraintStart_toEndOf="@+id/discover"
-                    app:layout_constraintEnd_toEndOf="@+id/connectionStatus"
-                    app:layout_constraintTop_toBottomOf="@+id/connectionStatus" />
+            <Button
+                android:id="@+id/groupInfo"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_weight="1"
+                android:text="@string/group_info_btn"
+                android:textAlignment="center"
+                android:textSize="20sp"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/discover"
+                app:layout_constraintEnd_toEndOf="@id/connectionStatus"
+                app:layout_constraintTop_toBottomOf="@+id/connectionStatus" />
 
-                <TextView
-                    android:id="@+id/textView"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="@string/devices_list_label"
-                    android:textColor="@color/background_gradient_end"
-                    android:textSize="20sp"
-                    app:layout_constraintStart_toStartOf="@+id/peerListView"
-                    app:layout_constraintTop_toBottomOf="@+id/discover"
-                    app:layout_constraintBottom_toTopOf="@+id/peerListView"
-                    app:layout_constraintVertical_chainStyle="packed" />
+            <TextView
+                android:id="@+id/textView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/devices_list_label"
+                android:background="@color/lb_grey"
+                android:textSize="20sp"
+                app:layout_constraintStart_toStartOf="@+id/peerListView"
+                app:layout_constraintTop_toBottomOf="@+id/discover"
+                app:layout_constraintBottom_toTopOf="@+id/peerListView"
+                app:layout_constraintVertical_chainStyle="packed" />
 
-                <ListView
-                    android:id="@+id/peerListView"
-                    style="@android:style/Widget.Material.ListView"
-                    android:layout_width="0dp"
-                    android:layout_height="200dp"
-                    android:layout_marginTop="8dp"
-                    android:background="@android:color/holo_orange_dark"
-                    android:minHeight="200dp"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintHorizontal_bias="0.5"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/textView" />
+            <ListView
+                android:id="@+id/peerListView"
+                style="@android:style/Widget.Material.ListView"
+                android:layout_width="0dp"
+                android:layout_height="200dp"
+                android:layout_marginTop="8dp"
+                android:background="@android:color/holo_orange_dark"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/textView" />
 
-                <TextView
-                    android:id="@+id/textView3"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="@string/received_msg_label"
-                    android:textColor="@color/background_gradient_end"
-                    android:textSize="20sp"
-                    app:layout_constraintStart_toStartOf="@+id/readMsg"
-                    app:layout_constraintTop_toBottomOf="@+id/peerListView"
-                    app:layout_constraintBottom_toTopOf="@+id/readMsg"
-                    app:layout_constraintVertical_chainStyle="packed" />
+            <TextView
+                android:id="@+id/textView3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/received_msg_label"
+                android:textSize="20sp"
+                app:layout_constraintStart_toStartOf="@+id/readMsg"
+                app:layout_constraintTop_toBottomOf="@+id/peerListView"
+                app:layout_constraintBottom_toTopOf="@+id/readMsg"
+                app:layout_constraintVertical_chainStyle="packed" />
 
-                <TextView
-                    android:id="@+id/readMsg"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:layout_weight="1"
-                    android:fontFamily="sans-serif"
-                    android:hint="@string/message_read_default"
-                    android:textAlignment="center"
-                    android:textColor="@color/background_gradient_end"
-                    android:textSize="20sp"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintHorizontal_bias="0.5"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/textView3" />
+            <TextView
+                android:id="@+id/readMsg"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_weight="1"
+                android:fontFamily="sans-serif"
+                android:hint="@string/message_read_default"
+                android:textAlignment="center"
+                android:textSize="20sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/textView3" />
 
-                <EditText
-                    android:id="@+id/writeMsg"
-                    android:layout_width="0dp"
-                    android:layout_height="48dp"
-                    android:layout_marginTop="8dp"
-                    android:ems="10"
-                    android:gravity="center|bottom"
-                    android:hint="@string/write_msg_default"
-                    android:inputType="textMultiLine"
-                    android:textAlignment="center"
-                    android:textColor="@color/background_gradient_end"
-                    android:textSize="20sp"
-                    app:layout_constraintHorizontal_bias="0.5"
-                    app:layout_constraintHorizontal_weight="3"
-                    app:layout_constraintStart_toStartOf="@+id/readMsg"
-                    app:layout_constraintEnd_toStartOf="@+id/sendButton"
-                    app:layout_constraintTop_toBottomOf="@+id/readMsg"
-                    app:layout_constraintHorizontal_chainStyle="spread" />
+            <EditText
+                android:id="@+id/writeMsg"
+                android:layout_width="0dp"
+                android:layout_height="48dp"
+                android:layout_marginTop="8dp"
+                android:autofillHints="@string/write_msg_default"
+                android:ems="10"
+                android:gravity="center|top"
+                android:hint="@string/write_msg_default"
+                android:inputType="textMultiLine"
+                android:textAlignment="center"
+                android:textSize="20sp"
+                app:layout_constraintEnd_toStartOf="@+id/sendButton"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintHorizontal_chainStyle="spread"
+                app:layout_constraintHorizontal_weight="3"
+                app:layout_constraintStart_toStartOf="@+id/readMsg"
+                app:layout_constraintTop_toBottomOf="@+id/readMsg" />
 
-                <Button
-                    android:id="@+id/sendButton"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text="@string/send_btn"
-                    android:textAlignment="center"
-                    android:textColor="@color/background_gradient_end"
-                    android:textSize="20sp"
-                    app:layout_constraintHorizontal_bias="0.5"
-                    app:layout_constraintHorizontal_weight="1"
-                    app:layout_constraintStart_toEndOf="@+id/writeMsg"
-                    app:layout_constraintEnd_toEndOf="@+id/readMsg"
-                    app:layout_constraintTop_toTopOf="@+id/writeMsg"
-                    app:layout_constraintBottom_toBottomOf="@+id/writeMsg" />
-
+            <Button
+                android:id="@+id/sendButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:text="@string/send_btn"
+                android:textAlignment="center"
+                android:textSize="20sp"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintHorizontal_weight="1"
+                app:layout_constraintStart_toEndOf="@+id/writeMsg"
+                app:layout_constraintEnd_toEndOf="@+id/readMsg"
+                app:layout_constraintTop_toTopOf="@+id/writeMsg"
+                app:layout_constraintBottom_toBottomOf="@+id/writeMsg" />
         </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

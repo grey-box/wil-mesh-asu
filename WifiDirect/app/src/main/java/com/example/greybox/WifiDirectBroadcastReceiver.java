@@ -35,6 +35,9 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
     // --------------------------------------------------------------------------------------------
     //  Methods
     // --------------------------------------------------------------------------------------------
+    public NetService getNetService() { return this.mNetService; }
+    public void setNetService(NetService netService) { this.mNetService = netService; }
+
     // NOTE: We don't require the actions:
     //  - WIFI_P2P_PEERS_CHANGED_ACTION. We now use NSD to connect to group owners. No need to request
     //    the list of peers.
@@ -67,6 +70,10 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
                 Log.d(TAG, "ownerAddr: " + group.getOwner().deviceAddress); // fake info
                 Log.d(TAG, "ssid:      " + group.getNetworkName());
                 Log.d(TAG, "pass:      " + group.getPassphrase());
+
+                Log.d(TAG, "mChannel: " + mChannel);
+                Log.d(TAG, "mNetService: " + mNetService);
+                Log.d(TAG, "getConnectionInfoListener: " + mNetService.getConnectionInfoListener());
 
                 // NOTE: `connectionInfoListener` performs the socket connection
                 mManager.requestConnectionInfo(mChannel, mNetService.getConnectionInfoListener());
