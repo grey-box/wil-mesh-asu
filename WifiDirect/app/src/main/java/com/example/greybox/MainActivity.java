@@ -135,7 +135,8 @@ public class MainActivity extends FragmentActivity {
     // initial work for creating objects from onCreate()
     private void initialization() {
         // create layout objects
-        btnGroupInfo = findViewById(R.id.groupinfo);
+
+        btnGroupInfo = findViewById(R.id.groupInfo);
         btnDiscover= findViewById(R.id.discover);
         btnSend= findViewById(R.id.sendButton);
         listView= findViewById(R.id.peerListView);
