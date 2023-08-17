@@ -37,10 +37,6 @@ public class ObjectSocketCommunication implements Runnable {
 
     @Override
     public void run() {
-        Log.d(TAG, " Running thread");
-        // Send a this object to be handled in another thread. Just in case we want to communicate
-        handler.obtainMessage(ThreadMessageTypes.HANDLE, this).sendToTarget();
-
         try {
             // NOTE: the order of creation matters. From the documentation of ObjectInputStream(InputStream in)
             //  and this post (https://stackoverflow.com/questions/14110986/new-objectinputstream-blocks):
