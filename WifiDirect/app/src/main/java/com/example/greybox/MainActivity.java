@@ -314,17 +314,23 @@ public class MainActivity extends FragmentActivity {
         btnSend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if (msgDstDevice == null) {
+                    Log.i(TAG, "Null recipient.");
+                    Toast.makeText(getApplicationContext(), "Select a recipient from the list", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
                 String msg = writeMsg.getText().toString();
+                if (msg.isEmpty()) {
+                    Log.i(TAG, "Empty message.");
+                    Toast.makeText(getApplicationContext(), "Write a message", Toast.LENGTH_SHORT).show();
+                    return;
+                }
 
                 ExecutorService executor = Executors.newSingleThreadExecutor();
                 executor.execute(new Runnable() {
                     @Override
                     public void run() {
-                        if (msg.isEmpty()) {
-                            Log.i(TAG, "Empty message.");
-                            return;
-                        }
-
                         // TODO: right now we only support one destination device
                         ArrayList<UUID> dstList = new ArrayList<>(1);
                         dstList.add(msgDstDevice.getDeviceId());
