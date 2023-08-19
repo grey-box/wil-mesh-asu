@@ -19,7 +19,6 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.ToggleButton;
 
 import androidx.annotation.NonNull;
 //import androidx.appcompat.app.AppCompatActivity;
@@ -30,6 +29,8 @@ import com.example.greybox.meshmessage.MeshMessageType;
 import com.example.greybox.netservice.MClientService;
 import com.example.greybox.netservice.MRouterService;
 import com.example.greybox.netservice.NetService;
+import com.google.android.material.button.MaterialButtonToggleGroup;
+import com.google.android.material.switchmaterial.SwitchMaterial;
 
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -53,10 +54,11 @@ public class MainActivity extends FragmentActivity {
 
     Button btnDiscover, btnSend, btnGroupInfo;
     ListView listView;
-    TextView read_msg_box, connectionStatus;
+    TextView readMsgBox;
+    TextView connectionStatus;
     EditText writeMsg;
-    ToggleButton deviceModeToggle;
-    ToggleButton connectToggle;
+    SwitchMaterial connectButton;
+    MaterialButtonToggleGroup deviceModeToggleGroup;
 
     //Wifi P2p Manager provides specif API for managing WIFI p2p connectivity
     WifiP2pManager mManager;
@@ -116,19 +118,11 @@ public class MainActivity extends FragmentActivity {
         btnDiscover= findViewById(R.id.discover);
         btnSend= findViewById(R.id.sendButton);
         listView= findViewById(R.id.peerListView);
-        read_msg_box= findViewById(R.id.readMsg);
+        readMsgBox = findViewById(R.id.readMsg);
         connectionStatus= findViewById(R.id.connectionStatus);
         writeMsg = findViewById(R.id.writeMsg);
-        deviceModeToggle = findViewById(R.id.deviceModeBtn);
-        connectToggle = findViewById(R.id.connectBtn);
-
-        Log.d(TAG, "btnGroupInfo: "+btnGroupInfo);
-        Log.d(TAG, "btnDiscover: "+btnDiscover);
-        Log.d(TAG, "btnSend: "+btnSend);
-        Log.d(TAG, "listView: "+listView);
-        Log.d(TAG, "read_msg_box: "+read_msg_box);
-        Log.d(TAG, "connectionStatus: "+connectionStatus);
-        Log.d(TAG, "writeMsg: "+writeMsg);
+        connectButton = findViewById(R.id.connectBtn);
+        deviceModeToggleGroup = findViewById(R.id.deviceModeToggleGroup);
 
         // create wifi p2p manager providing the API for managing Wifi peer-to-peer connectivity
         mManager = (WifiP2pManager) getApplicationContext().getSystemService(Context.WIFI_P2P_SERVICE);
@@ -195,10 +189,10 @@ public class MainActivity extends FragmentActivity {
 
     // implemented method for app object action listeners
     private void setListeners(){
-        connectToggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        connectButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
-                    deviceModeToggle.setEnabled(false);
+                    deviceModeToggleGroup.setEnabled(false);
                     if (isAP) {
                         mNetService = new MRouterService(getApplicationContext(), wfdNetManagerService, uiHandler);
                     } else {
@@ -215,7 +209,7 @@ public class MainActivity extends FragmentActivity {
 
                     mNetService.start();
                 } else {
-                    deviceModeToggle.setEnabled(true);
+                    deviceModeToggleGroup.setEnabled(true);
                     mNetService.stop();
                     // TODO: maybe this should be part of mNetService.stop();
                     wfdNetManagerService.tearDown();
@@ -224,9 +218,13 @@ public class MainActivity extends FragmentActivity {
                 }
             }
         });
-        deviceModeToggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                isAP = isChecked;
+
+        deviceModeToggleGroup.addOnButtonCheckedListener(new MaterialButtonToggleGroup.OnButtonCheckedListener() {
+            @Override
+            public void onButtonChecked(MaterialButtonToggleGroup group, int checkedId, boolean isChecked) {
+                if (isChecked) {
+                    isAP = (checkedId == R.id.apModeBtn);
+                }
             }
         });
 
@@ -273,7 +271,7 @@ public class MainActivity extends FragmentActivity {
                         System.out.println("Error getting network interfaces: " + e.getMessage());
                     }
                 }
-                read_msg_box.setText(str);
+                readMsgBox.setText(str);
 
             }
         });
@@ -409,14 +407,14 @@ public class MainActivity extends FragmentActivity {
             }
 
             Log.d(TAG, " read_msg_box: " + stringBuilder);
-            read_msg_box.setText(stringBuilder.toString());
+            readMsgBox.setText(stringBuilder.toString());
         }
     };
 
     NetService.MessageTextUiCallback messageTextUiCallback = new NetService.MessageTextUiCallback() {
         @Override
         public void updateMessageTextUiCallback(String msgText) {
-            read_msg_box.setText(msgText);
+            readMsgBox.setText(msgText);
         }
     };
     ///
@@ -464,8 +462,7 @@ public class MainActivity extends FragmentActivity {
         // TODO: same as the comment in the `onPause()` method above.
 //        nsdHelper.tearDown();
 //        connection.tearDown();
-
-        mNetService.stop();
+        if (mNetService != null) mNetService.stop();
 //        wfdNetManagerService.tearDown();
         mChannel.close();
         super.onDestroy();

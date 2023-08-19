@@ -5,45 +5,53 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp"
-    android:fillViewport="true">
-<!--    tools:context=".MainActivity"-->
+    android:fillViewport="true"
+    tools:context=".MainActivity">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <ToggleButton
+            <com.google.android.material.switchmaterial.SwitchMaterial
                 android:id="@+id/connectBtn"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
+                style="?attr/materialSwitchStyle"
                 android:checked="false"
-                android:text="@string/start_app_toggle"
-                android:textOff="@string/start_app_toggle"
-                android:textOn="@string/stop_app_toggle"
-                android:textAlignment="center"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/connect_switch"
                 android:textSize="20sp"
                 app:layout_constraintHorizontal_bias="0.5"
-                app:layout_constraintEnd_toStartOf="@+id/deviceModeBtn"
+                app:layout_constraintEnd_toStartOf="@+id/deviceModeToggleGroup"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
-            <ToggleButton
-                android:id="@+id/deviceModeBtn"
-                android:layout_width="0dp"
+            <com.google.android.material.button.MaterialButtonToggleGroup
+                android:id="@+id/deviceModeToggleGroup"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_weight="1"
-                android:checked="false"
-                android:text="@string/ap_mode_toggle"
-                android:textOff="@string/client_mode_toggle"
-                android:textOn="@string/ap_mode_toggle"
-                android:textAlignment="center"
-                android:textSize="20sp"
-                app:layout_constraintHorizontal_bias="0.5"
+                app:singleSelection="true"
+                app:checkedButton="@id/clientModeBtn"
                 app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toEndOf="@id/connectBtn"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/clientModeBtn"
+                    style="?attr/materialButtonOutlinedStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/client_mode_toggle"
+                    android:textSize="20sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/apModeBtn"
+                    style="?attr/materialButtonOutlinedStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/ap_mode_toggle"
+                    android:textSize="20sp" />
+            </com.google.android.material.button.MaterialButtonToggleGroup>
 
             <TextView
                 android:id="@+id/connectionStatus"
@@ -57,33 +65,33 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/connectBtn" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/discover"
+                style="?attr/materialButtonOutlinedStyle"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="0dp"
                 android:layout_weight="1"
                 android:text="@string/discover_btn"
                 android:textAlignment="center"
                 android:textSize="20sp"
                 app:layout_constraintHorizontal_bias="0.5"
-                app:layout_constraintStart_toStartOf="@id/connectionStatus"
+                app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toStartOf="@+id/groupInfo"
-                app:layout_constraintTop_toTopOf="@+id/groupInfo" />
+                app:layout_constraintTop_toBottomOf="@+id/connectionStatus" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/groupInfo"
+                style="?attr/materialButtonOutlinedStyle"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
                 android:layout_weight="1"
                 android:text="@string/group_info_btn"
                 android:textAlignment="center"
                 android:textSize="20sp"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toEndOf="@+id/discover"
-                app:layout_constraintEnd_toEndOf="@id/connectionStatus"
-                app:layout_constraintTop_toBottomOf="@+id/connectionStatus" />
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/discover" />
 
             <TextView
                 android:id="@+id/textView"
@@ -91,7 +99,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:text="@string/devices_list_label"
-                android:background="@color/lb_grey"
                 android:textSize="20sp"
                 app:layout_constraintStart_toStartOf="@+id/peerListView"
                 app:layout_constraintTop_toBottomOf="@+id/discover"
@@ -100,11 +107,10 @@
 
             <ListView
                 android:id="@+id/peerListView"
-                style="@android:style/Widget.Material.ListView"
+                android:background="#B884F8"
                 android:layout_width="0dp"
                 android:layout_height="200dp"
                 android:layout_marginTop="8dp"
-                android:background="@android:color/holo_orange_dark"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toStartOf="parent"
@@ -132,8 +138,8 @@
                 android:hint="@string/message_read_default"
                 android:textAlignment="center"
                 android:textSize="20sp"
-                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/textView3" />
 
@@ -149,16 +155,17 @@
                 android:inputType="textMultiLine"
                 android:textAlignment="center"
                 android:textSize="20sp"
-                app:layout_constraintEnd_toStartOf="@+id/sendButton"
                 app:layout_constraintHorizontal_bias="0.5"
-                app:layout_constraintHorizontal_chainStyle="spread"
                 app:layout_constraintHorizontal_weight="3"
+                app:layout_constraintEnd_toStartOf="@+id/sendButton"
+                app:layout_constraintHorizontal_chainStyle="spread"
                 app:layout_constraintStart_toStartOf="@+id/readMsg"
                 app:layout_constraintTop_toBottomOf="@+id/readMsg" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/sendButton"
-                android:layout_width="0dp"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
                 android:text="@string/send_btn"
