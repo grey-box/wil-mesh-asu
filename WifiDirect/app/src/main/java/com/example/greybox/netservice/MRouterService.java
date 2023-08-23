@@ -32,10 +32,7 @@ public class MRouterService extends NetService {
 //    private MRouterWfdModule mWfdModule; // NOTE: see the comment on wfdNetManagerService
     private MRouterNetSockModule mNetSock;
 
-    /// PE_MSG_SPECIFIC_CLIENT
-//    HashMap<String, MeshDevice> groupClients = new HashMap<>();
-    ArrayList<MeshDevice> groupClients = new ArrayList<>();
-    ///
+    private ArrayList<MeshDevice> groupClients = new ArrayList<>();
 
     // --------------------------------------------------------------------------------------------
     //  Constructors
@@ -52,13 +49,11 @@ public class MRouterService extends NetService {
     public void start() {
         super.setConnectionInfoListener(this.connectionInfoListener);
         super.setGroupInfoListener(this.groupInfoListener);
-        // NOTE: try to remove any existing group. Currently the first attempt to create a group
-        //  fails because the framework is busy. Hopefully this solves the issue
+        // NOTE: try to remove any existing group. This prevents a problem related to busy framework
         super.wfdModule.tearDown();
         super.wfdModule.createSoftAP();
     }
 
-    // TODO: maybe this name is not appropriate
     @Override
     public void stop() {
         if (mNetSock == null) return;
@@ -70,8 +65,6 @@ public class MRouterService extends NetService {
         mNetSock.write(msg);
     }
 
-
-    /// PE_MSG_SPECIFIC_CLIENT
     private void addClient(MeshDevice newClient) {
         Log.d(TAG, "addClient");
         Log.d(TAG, " newClient: " + newClient);
@@ -124,10 +117,8 @@ public class MRouterService extends NetService {
                         Log.d(TAG, "CLIENT_SOCKET_CONNECTION");
 
                         addClient((MeshDevice) meshMsg.getData());
-                        /// PE_MSG_SPECIFIC_CLIENT
                         notifyClients();
                         updateClientListUi();
-                        ///
                         break;
                     // TODO: for this case we could use the template method design pattern since it's
                     //  almost identical for the Client and the GO
@@ -164,15 +155,12 @@ public class MRouterService extends NetService {
                 break;
 
             case ThreadMessageTypes.CLIENT_SOCKET_CONNECTION:
-                /// PE_MSG_SPECIFIC_CLIENT
                 // GO doesn't do anything for this type of message. The data will be received as a
                 //  MeshMessage and processed in NEW_CLIENT_SOCKET_CONNECTION
-                ///
             default:
                 break;
         }
     }
-    ///
 
 
     // --------------------------------------------------------------------------------------------
@@ -196,26 +184,16 @@ public class MRouterService extends NetService {
                 return;
             }
 
-            /// PE_AUTO_CONNECT
-
-            // TODO: According to https://developer.android.com/training/connect-devices-wirelessly/nsd#discover
+            // TODO: According to https://developer.android.com/training/connect-devices-wirelessly/nsd#register
             //  it's recommended to use a non-fixed port number. Request it to the system and store
             //  it in a variable and pass it around. Also, the port number should be sent in the Bonjour
-            //  information when broadcasting the service.
-//            serverSocket = new ServerSocket(0);
-//            // Store the chosen port.
-//            localPort = serverSocket.getLocalPort();
+            //  information when broadcasting the service. Therefore, the most reasonable part to do
+            //  this should be in WfdNetManagerService.createSoftAP().
+            //  Use `serverSocket = new ServerSocket(0);` and then `localPort = serverSocket.getLocalPort();`
             final int PORT = 8888;
-            ///
 
             // Once the connection info is ready, create the sockets depending on the role of the device
-            // Check if we are the GO or a client
-
-            // TODO: the ServerSocket needs to be created at the moment we create the softAP
-            //  since it's recommended to have a dynamic port instead of a fixed one.
-            // TODO: convert this into a singleton?
             if (mNetSock == null) {
-                // Create a ServerSocket
                 mNetSock = new MRouterNetSockModule(externalHandler, PORT);
             }
 
@@ -237,7 +215,6 @@ public class MRouterService extends NetService {
                 groupInfoUiCallback.updateGroupInfoUi(wifiP2pGroup);
             }
 
-            /// PE_AUTO_CONNECT
             // TODO: temp. This is just for debugging.
             Log.d(TAG, "wifiP2pGroup:\n" + wifiP2pGroup + "\n");
             Log.d(TAG, "isGO:             " + wifiP2pGroup.isGroupOwner());
@@ -254,7 +231,6 @@ public class MRouterService extends NetService {
             for (WifiP2pDevice d : wifiP2pGroup.getClientList()) {
                 Log.d(TAG, d.toString());
             }
-            ///
         }
     };
 

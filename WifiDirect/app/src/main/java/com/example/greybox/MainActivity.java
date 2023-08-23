@@ -49,7 +49,6 @@ import java.util.concurrent.Executors;
     Sarthi Technology - https://www.youtube.com/playlist?list=PLFh8wpMiEi88SIJ-PnJjDxktry4lgBtN3
  */
 public class MainActivity extends FragmentActivity {
-//public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
 
     Button btnDiscover, btnSend, btnGroupInfo;
@@ -77,18 +76,13 @@ public class MainActivity extends FragmentActivity {
 
     private NetService mNetService;
 
-    /// PE_AUTO_CONNECT
     WfdNetManagerService wfdNetManagerService;
-    ///
     Handler uiHandler;
-    /// PE_MSG_SPECIFIC_CLIENTS
+
     private MeshDevice msgDstDevice;        // Destination device of the message
     private ArrayList<MeshDevice> groupClientsList = new ArrayList<>();  // List of the connected devices in the group. Used to get the MAC address
     private String[] groupClientsNames;     // List of devices names to be displayed on the UI
-    private String myMacAddress = "";
-    ///
     private boolean isAP = false;
-    private boolean isConnected = false;
 
 
     //imported override method onCreate. Initialize the the activity.
@@ -137,8 +131,6 @@ public class MainActivity extends FragmentActivity {
         // TODO: This might be used to obtain the device name, but our current approach is to use bluetooth name
         mIntentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
-
-        /// PE_AUTO_CONNECT
         Log.d(TAG, "Creating WfdNetManagerService");
         wfdNetManagerService = new WfdNetManagerService(mManager, mChannel);
 
@@ -280,7 +272,6 @@ public class MainActivity extends FragmentActivity {
         btnDiscover.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                /// PE_AUTO_CONNECT TMP
                 // NOTE: Here we use the button to start the broadcast and discover manually if the first
                 //  automatic discovery failed.
 
@@ -293,7 +284,6 @@ public class MainActivity extends FragmentActivity {
                     // NOTE: all these are async calls
                     Log.d(TAG, "Starting service discovery again.");
                     wfdNetManagerService.wfdDnsSdManager.discoverServices();
-                    ///
                 }
             }
         });
@@ -343,7 +333,6 @@ public class MainActivity extends FragmentActivity {
         });
     }
 
-    /// PE_MSG_SPECIFIC_CLIENTS
     // TODO: this is not the correct way to do this. It's just to save development time. The best
     //  would be to use the MVVM model to deal with UI updates. Also, if we use lists, we should use
     //  the RecyclerView element in our UI.
@@ -354,19 +343,13 @@ public class MainActivity extends FragmentActivity {
      */
      NetService.ClientListUiCallback updateClientsListCallback = new NetService.ClientListUiCallback() {
         @Override
-        /// testing
-//        public void updateClientsUi(HashMap<String, MeshDevice> clients) {
         public void updateClientsUi(ArrayList<MeshDevice> clients) {
-        ///
             Log.d(TAG, "Updating client list");
             Log.d(TAG, "List of clients received: " + clients);
             groupClientsList.clear();
-            /// testing
-//            groupClientsList.addAll(new ArrayList<>(clients.values()));
             groupClientsList.addAll(new ArrayList<>(clients));
-            ///
 
-            //store peers list device names to be display and add to device array to be selected
+            // store the device names to be display
             groupClientsNames = new String[clients.size()];
             Log.d(TAG, "Number of clients: " + clients.size());
 
@@ -426,7 +409,7 @@ public class MainActivity extends FragmentActivity {
         super.onResume();
         mReceiver = new WifiDirectBroadcastReceiver(mManager, mChannel, mNetService);
         registerReceiver(mReceiver,mIntentFilter);
-        /// PE_AUTO_CONNECT
+        /// NOTE: example code from https://developer.android.com/training/connect-devices-wirelessly/nsd#teardown
 //        if (nsdHelper != null) {
 //        if (wfdDnsSdService != null) {
 //            nsdHelper.registerService(connection.getLocalPort());
@@ -440,13 +423,12 @@ public class MainActivity extends FragmentActivity {
     // longer in the foreground.
     @Override
     protected void onPause(){
-        /// PE_AUTO_CONNECT
-        // TODO: do we need to stop and unregister the services when the app is paused/destroyed in
-        //  the case of WiFi Direct for SD as it is shown with the guide of NSD for local networks?
-        //  The guide for WiFi Direct for SD (https://developer.android.com/training/connect-devices-wirelessly/nsd-wifi-direct)
-        //  doesn't say anything but, the guide for NSD on a local network (https://developer.android.com/training/connect-devices-wirelessly/nsd)
-        //  does the following:
-        // We have to unregister and stop advertising the service
+        /// TODO: do we need to stop and unregister the services when the app is paused/destroyed in
+        //   the case of WiFi Direct for SD as it is shown with the guide of NSD for local networks?
+        //   The guide for WiFi Direct for SD (https://developer.android.com/training/connect-devices-wirelessly/nsd-wifi-direct)
+        //   doesn't say anything but, the guide for NSD on a local network (https://developer.android.com/training/connect-devices-wirelessly/nsd)
+        //   does the following:
+        // NOTE: example code from https://developer.android.com/training/connect-devices-wirelessly/nsd#teardown
 //        if (nsdManager != null) {
 //            nsdManager.tearDown();
 //        }
@@ -456,18 +438,14 @@ public class MainActivity extends FragmentActivity {
         unregisterReceiver(mReceiver);
     }
 
-    /// PE_AUTO_CONNECT
     @Override
     protected void onDestroy() {
-        // TODO: same as the comment in the `onPause()` method above.
+        /// TODO: same as the comment in the `onPause()` method above.
 //        nsdHelper.tearDown();
 //        connection.tearDown();
+        ///
         if (mNetService != null) mNetService.stop();
-//        wfdNetManagerService.tearDown();
         mChannel.close();
         super.onDestroy();
     }
-    ///
-
-
 }

@@ -73,8 +73,6 @@ public abstract class NetService {
         return externalHandler;
     }
 
-    // TODO: do we really want to have this listeners here? We need them for the BroadcastReceiver
-    //  but they could be part of the WfdModule
     public WifiP2pManager.ConnectionInfoListener getConnectionInfoListener() { return connectionInfoListener; };
 
     public WifiP2pManager.GroupInfoListener getGroupInfoListener() { return groupInfoListener; };

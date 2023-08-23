@@ -10,15 +10,13 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.UUID;
 
-// TODO: how to deal with many groups? Maybe a client sends it to its GO, and the GO decides if
-//  it should send it to all other GOs he reaches to, and those GO will evaluate if they have access
-//  to the desired client or if it repeats the process.
+
 public class MeshDevice implements Serializable {
     private static final String TAG = "MeshDevice";
 
     private UUID deviceId;
     private String deviceName = "";
-    private ObjectSocketCommunication socketComm = null;   // TODO: we now use ObjectSocketCommunication.
+    private ObjectSocketCommunication socketComm = null;
     private boolean isGo = false;
 
     // --------------------------------------------------------------------------------------------

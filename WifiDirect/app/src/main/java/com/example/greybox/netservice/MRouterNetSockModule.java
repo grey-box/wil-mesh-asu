@@ -22,7 +22,6 @@ public class MRouterNetSockModule implements Runnable {
     ///
     // TODO: tmp class to have a structure of clients and assign them an id
     public volatile int clientId;
-//    volatile HashMap<String, MeshDevice> clientList;
     volatile ArrayList<ObjectSocketCommunication> clientSockets;
     ///
     private final Object mutex = new Object();
@@ -41,7 +40,6 @@ public class MRouterNetSockModule implements Runnable {
             throw new RuntimeException("ServerSocket couldn't be created.");
         }
         this.parentHandler = parentHandler;
-//        this.clientList = new HashMap<>();
         this.clientSockets = new ArrayList<>();
     }
 
@@ -53,15 +51,6 @@ public class MRouterNetSockModule implements Runnable {
     public void run() {
         Socket socket = null;
         ObjectSocketCommunication socketComm;
-        ///
-        // We need to know when the socket client connects to us. After that happens, the comm channel
-        // is ready to send the client list to the clients.
-        // NOTE: By default the Handler is associated with the thread it is instantiated on
-        // TODO: UPDATE: delete all references to this code. It's better to do it in the SocketCommunicationObjects class
-//        if (socketHandler == null) {
-//            socketHandler = new Handler(Looper.myLooper(), socketCommMessageCallback);
-//        }
-        ///
 
         try {
             // accept and store socket from server socket
@@ -80,11 +69,6 @@ public class MRouterNetSockModule implements Runnable {
             // TODO: this doesn't seem to execute if the connection failed from the side of the client
             //  due to a VPN, so, I'm assuming this it's still waiting for a connection in serverSocket.accpet()
             //  the problem is that the WifiP2pManager changed of state (an intent was received).
-            // TODO: Also, if the client disconnects, we are not handling correctly the event. The log
-            //  is messed up because we handle the exception but we don't do anything, just printing
-            //  the error in an infinite loop.
-            // wait to see if the socket is connected. If not, abort
-//            Thread.sleep(500);
             Log.d(TAG, " socket.isConnected(): " + socket.isConnected());
             Log.d(TAG, " socket.isClosed():    " + socket.isClosed());
             if (socket.isClosed() || !socket.isConnected()) {
@@ -118,7 +102,6 @@ public class MRouterNetSockModule implements Runnable {
         // Critical section
         synchronized (mutex) {
             clientId++;
-//                clientList.put(new MeshDevice(clientId, socketComm));
             // TODO: need to remove the proper instance when the socket disconnects. How can we know
             //  which one disconnected?  We would need to identify the socketComm
             clientSockets.add(socketComm);
@@ -130,9 +113,6 @@ public class MRouterNetSockModule implements Runnable {
     }
 
     public void write(MeshMessage msg) {
-//        for (Map.Entry<String, MeshDevice> entry : clientList.entrySet()) {
-//            entry.getValue().socketComm.write(msg);
-//        }
         for (ObjectSocketCommunication s : clientSockets) {
             Log.d(TAG, "Writing to: " + s.getObjectOutputStream());
             s.write(msg);

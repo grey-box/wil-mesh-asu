@@ -40,11 +40,8 @@ public class MClientService extends NetService {
     // --------------------------------------------------------------------------------------------
     //  Constructors
     // --------------------------------------------------------------------------------------------
-    // TODO: Just for now, this class will be tightly coupled with MainActivity's View objects like
-    //  read_msg_box
     public MClientService(Context context, WfdNetManagerService wfd, Handler handler) {
         super(context, wfd, handler);
-        Log.d(TAG, "handler: " + handler);
     }
 
     // --------------------------------------------------------------------------------------------
@@ -54,8 +51,7 @@ public class MClientService extends NetService {
     public void start() {
         super.setConnectionInfoListener(this.connectionInfoListener);
         super.setGroupInfoListener(this.groupInfoListener);
-        // NOTE: try to remove any existing group. Currently the first attempt to create a group
-        //  fails because the framework is busy. Hopefully this solves the issue
+        // NOTE: try to remove any existing group. This prevents a problem related to busy framework
         super.wfdModule.tearDown();
         super.wfdModule.discoverServices();
     }
@@ -75,8 +71,7 @@ public class MClientService extends NetService {
     public void handleThreadMessage(Message msg) {
         switch (msg.what) {
             case ThreadMessageTypes.MESSAGE_READ:
-                // This message requests display in the UI the data received from another
-                // device
+                // This message requests display in the UI the data received from another device
                 // The object received is a MeshMessage object
                 MeshMessage meshMsg = (MeshMessage) msg.obj;
 
@@ -96,9 +91,6 @@ public class MClientService extends NetService {
                         }
 
                         Log.d(TAG, " deviceId:    " + getDevice().getDeviceId());
-                        // From the article: the first two characters of a MAC address may change
-                        // for the same device and same network interface, and should  be ignored.
-                        // TODO: for now, the GO won't display the messages since its macAddress is empty
                         if (recipientId.equals(getDevice().getDeviceId())) {
                             // The message is for this device
                             getMessageTextUiCallback().updateMessageTextUiCallback((String) meshMsg.getData());
@@ -106,8 +98,8 @@ public class MClientService extends NetService {
                         break;
                     case CLIENT_LIST:
                         Log.d(TAG, "CLIENT_LIST");
-                        // NOTE: this case is used mostly by the Client devices. Routers
-                        //  update their list differently
+                        // NOTE: this case is used mostly by the Client devices. Routers update
+                        //  their list differently
                         Log.d(TAG, " Updating the client list UI");
 //                        HashMap<String, MeshDevice> groupClients = (HashMap<String, MeshDevice>) (meshMsg.getData());
                         ArrayList<MeshDevice> groupClients = (ArrayList<MeshDevice>) (meshMsg.getData());
@@ -146,9 +138,7 @@ public class MClientService extends NetService {
                 return;
             }
 
-            // TODO: According to https://developer.android.com/training/connect-devices-wirelessly/nsd#discover
-            //  it's recommended to use a non-fixed port number. Request it to the system and store
-            //  it in a variable and pass it around.
+            // TODO: The port should be read from the information received from the service discovery
             final int PORT = 8888;
             ///
 
@@ -173,8 +163,7 @@ public class MClientService extends NetService {
                 groupInfoUiCallback.updateGroupInfoUi(wifiP2pGroup);
             }
 
-            /// PE_AUTO_CONNECT
-
+            // TODO: temp. This is just for debugging.
             Log.d(TAG, "wifiP2pGroup:\n" + wifiP2pGroup + "\n");
             Log.d(TAG, "isGO:          " + wifiP2pGroup.isGroupOwner());
             Log.d(TAG, "owner:         " + wifiP2pGroup.getOwner());
@@ -190,7 +179,6 @@ public class MClientService extends NetService {
             for (WifiP2pDevice d : wifiP2pGroup.getClientList()) {
                 Log.d(TAG, d.toString());
             }
-            ///
         }
     };
 
@@ -204,20 +192,6 @@ public class MClientService extends NetService {
             //  device, and whether is a group owner. But it won't give us the MAC address.
             Log.d(TAG, "deviceInfoListener.onDeviceInfoAvailable");
             Log.d(TAG, " wifiP2pDevice:\n" + wifiP2pDevice);
-        }
-    };
-
-    // TODO: this listener is useless since we simply don't use it anymore with the auto-connect
-    //  feature. Remove it.
-    // Wifi P2P Manager peer list listener for collecting list of wifi peers
-    WifiP2pManager.PeerListListener peerListListener = new WifiP2pManager.PeerListListener() {
-
-        // override method to find peers available
-        @Override
-        public void onPeersAvailable(WifiP2pDeviceList peerList) {
-            // TODO: check if every time this listener is called, it means that the peerList is different
-            //  from the previous one. I don't think we need to check if lists are different.
-            Log.i(TAG, "peerListListener.onPeersAvailable");
         }
     };
 }

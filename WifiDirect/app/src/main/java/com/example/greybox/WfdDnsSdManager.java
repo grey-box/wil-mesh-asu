@@ -13,8 +13,6 @@ import java.util.Map;
 import java.util.Objects;
 
 
-/// PE_AUTO_CONNECT
-
 // TODO: either delete "Manager" from the name or change the name of the `WifiP2pManager manager`
 //  attribute since it gives the impression that `manager` could be related to the name of the class
 public class WfdDnsSdManager {
@@ -25,8 +23,6 @@ public class WfdDnsSdManager {
     private boolean isLocalServiceRegistered = false;
     private boolean isAddServiceRequestMade = false;
     final private HashMap<String, ConnectionData> gosData = new HashMap<>();
-//    ArrayList<ConnectionData> groupOwners;
-//    ArrayList<HashMap<String, ConnectionData>> groupOwners;
     WifiP2pDnsSdServiceRequest serviceRequest;
 
 
@@ -37,7 +33,6 @@ public class WfdDnsSdManager {
     public WfdDnsSdManager(WifiP2pManager manager, WifiP2pManager.Channel channel) {
         this.manager = manager;
         this.channel = channel;
-//        this.groupOwners = new ArrayList<>();
     }
 
 
@@ -141,9 +136,6 @@ public class WfdDnsSdManager {
             }
         };
 
-        // TODO: Not sure if this callback is useful in our case. The connection information is
-        //  in the TXT record. Here we don't have direct access to it in the arguments. Maybe I need
-        //  to do the same as the example
         // Source: https://developer.android.com/training/connect-devices-wirelessly/nsd-wifi-direct
         // This receives the actual description and connection information. The service response
         // listener uses the relationship device-name created in txtRecordListener to link the DNS
@@ -313,4 +305,3 @@ public class WfdDnsSdManager {
         Log.d(TAG, "discoverServices end");
     }
 }
-///

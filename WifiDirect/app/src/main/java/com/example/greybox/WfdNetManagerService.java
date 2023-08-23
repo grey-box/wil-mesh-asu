@@ -29,16 +29,12 @@ public class WfdNetManagerService {
     private static final String ENCRYPTION_KEY = "TODO";  // TODO: is it secure to have the encryption key as an attribute?
 
     public WfdDnsSdManager wfdDnsSdManager;
-    /// TODO: THIS DOESN'T WORK. In one device with Android 13 we cannot get the MAC address. On another
-    //   device with Android 12, the MAC obtained is different to that obtained from the WiFi P2P framework.
-    //   I'm not sure if I'm using the right interface, but it's not a standard name.
-    //   In my devices it's called either: p2p-wlan0-2, p2p0, p2p-wlan0-3
-//    final static String WIRELESS_INTERFACE_NAME = "wlan0";  // This interface gives us a different MAC from the used in WiFi Direct
-    final static String WIFI_P2P_INTERFACE_NAME = "p2p";    // Will be used with "String.contains()" since varies depending on the device
-    ///
 
-    /// TODO: we still have a dependency on this value. It's used to restart the service discovery
-    //   manually (pressing the DISCOVER button) when the connection was not established automatically
+
+    /// TODO: this variable was intended to be used for debugging. However, we have a dependency on
+    //   it. It's used to restart the service discovery manually (pressing the DISCOVER button) when
+    //   the connection was not established automatically. If we implement another way to guarantee
+    //   or retry service discovery, then we can remove it
     public boolean _isGO = false;
 
     // TODO: shouldn't the port be requested to the OS by calling SocketServer(0)? But that means
@@ -94,17 +90,16 @@ public class WfdNetManagerService {
     }
 
     private String encryptInformation(String data) {
-        // TODO: implement the real thing
+        /// TODO: implement the real thing
 //        javax.crypto.Cipher.getInstance();
+        ///
         return data;
     }
 
 
     // Network Discovery Service
-    // TODO: pass the encrypted MAC address as a parameter or we encrypt it here? Who has
+    // TODO: do we pass the encrypted information as an argument or do we encrypt it here? Who has
     //  the key to encrypt? I guess that's what answers the question.
-    // TODO: if we fail to get the MAC address I think we need to return some error and just abort
-    //  the whole operation, not just "return" as it's done right now
     public void makeNSDBroadcast(String enSSID, String enPass) {
         Log.d(TAG, "start makeNSDBroadcast");
 
@@ -118,7 +113,9 @@ public class WfdNetManagerService {
         record.put("ssid", enSSID);
         record.put("pass", enPass);
         record.put("port", String.valueOf(SERVER_PORT));
-        record.put("name", "greybox" + (int) (Math.random() * 1000));   // TODO: I guess we need to remove the random number
+        // NOTE: the random number might be useful once we have multiple GOs. This random number
+        //  comes from the example on https://developer.android.com/training/connect-devices-wirelessly/nsd-wifi-direct#register
+        record.put("name", "greybox" + (int) (Math.random() * 1000));
 
         // Service information.  Pass it an instance name, service type `_protocol._transportlayer`,
         // and the map containing information other devices will want once they connect to this one
@@ -136,9 +133,6 @@ public class WfdNetManagerService {
         wfdDnsSdManager.discoverServices();
     }
 
-    // TODO: still unclear if we are going to need this. For now I hope it will help to have a better
-    //  behavior of the prototype, since the T95 doesn't seem to have a way to manually delete the
-    //  groups as happens with mobile devices. This will be called on `onDestroy()`
     public void tearDown() {
 
         wfdDnsSdManager.removeLocalService(dnsSdServiceInfo);
@@ -190,10 +184,10 @@ public class WfdNetManagerService {
     };
 
 
-    /// PE_MSG_SPECIFIC_CLIENT
+    ///
     // TODO: consider removing all these methods related to the MAC address. Now, we are not using
     //  the MAC address to identify the devices. We create our own ID using UUID.randomUUID() in the
-    //  NetService constructor
+    //  NetService constructor. Leaving them for now in case they are required for any reason.
 
     // Helper methods. From https://www.baeldung.com/java-mac-address
     private static String macBytesToString(byte[] hardwareAddress) {
@@ -258,11 +252,16 @@ public class WfdNetManagerService {
         byte[] macAddress = ni.getHardwareAddress();
         return macBytesToString(macAddress);
     }
-    /// PE_MSG_SPECIFIC_CLIENT
 
     /*
      * This method won't work if SDK target is Android 11+
      */
+    // TODO: THIS DOESN'T WORK. In one device with Android 13 we cannot get the MAC address. On another
+    //   device with Android 12, the MAC obtained is different to that obtained from the WiFi P2P framework.
+    //   I'm not sure if I'm using the right interface, but it's not a standard name.
+    //   In my devices it's called either: p2p-wlan0-2, p2p0, p2p-wlan0-3
+//    final static String WIRELESS_INTERFACE_NAME = "wlan0";  // This interface gives us a different MAC from the used in WiFi Direct
+    final static String WIFI_P2P_INTERFACE_NAME = "p2p";    // Will be used with "String.contains()" since varies depending on the device
     public static String getDeviceMacAddress() {
         try {
             List<NetworkInterface> networkInterfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
@@ -281,5 +280,5 @@ public class WfdNetManagerService {
 
         return "";
     }
+    ///
 }
-///

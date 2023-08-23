@@ -53,13 +53,10 @@ public class ObjectSocketCommunication implements Runnable {
             return;
         }
 
-
-        /// PE_MSG_SPECIFIC_CLIENTS
         // NOTE: Unfortunately, this is action is only meant for clients. CLIENT_SOCKET_CONNECTION
         //  indicates the client to send its info to the GO so it can update the list of clients
         //  and then broadcast it to other clients
         handler.obtainMessage(ThreadMessageTypes.CLIENT_SOCKET_CONNECTION, this).sendToTarget();
-        ///
 
         // While socket is still open
         while (!socket.isClosed()) {
