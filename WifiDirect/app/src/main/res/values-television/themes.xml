@@ -1,4 +1,3 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-
+<resources>
     <style name="Theme.Greybox" parent="@style/Theme.Leanback" />
 </resources>

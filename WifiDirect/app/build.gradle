@@ -21,6 +21,20 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
+    // Here we can exclude files from build
+//    sourceSets {
+//        main {
+//            java {
+//                exclude '**/DnsSdManager.java'
+//            }
+//        }
+//        androidTest {
+//            java {
+//                exclude '**/TestSomeExcludedClass.java'
+//            }
+//        }
+//    }
 }
 
 dependencies {
@@ -28,4 +42,5 @@ dependencies {
     implementation 'androidx.leanback:leanback:1.0.0'
     implementation 'com.github.bumptech.glide:glide:4.11.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'com.google.android.material:material:1.9.0'
 }

@@ -1,11 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- Adding wifi network permissions -->
-    <!--  TODO: PE_FIX: There are some warnings in this section:
-           1. ACCESS_COURSE_LOCATION should be ACCESS_COARSE_LOCATION
-           2. The semicolons at the end produce warnings -->
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE"/>
@@ -19,21 +15,25 @@
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
 
     <!--    PE_NOTE: removed the required="true" because we want to support tablets and phones -->
-    <uses-feature android:name="android.software.leanback" android:required="false" />
+    <uses-feature android:name="android.software.leanback" android:required="true" />
 
-    <!--  TODO: PE_FIX: The "uses-feature" below was added to suppress a warning for ACCESS_FINE_LOCATION above -->
+    <!--  The "uses-feature" below was added to suppress a warning for ACCESS_FINE_LOCATION above -->
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
 
+<!--    android:theme="@style/Theme.MaterialComponents.DayNight.NoActionBar"-->
+<!--    android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"-->
+<!--    android:theme="@style/Theme.Greybox"-->
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Greybox">
+        android:theme="@style/Theme.MaterialComponents.DayNight" >
         <activity
             android:name=".MainActivity"
             android:banner="@drawable/logo_greybox"
-            android:exported="true" >
+            android:exported="true"
+            android:theme="@style/Theme.MaterialComponents.DayNight" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 <!--                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />-->

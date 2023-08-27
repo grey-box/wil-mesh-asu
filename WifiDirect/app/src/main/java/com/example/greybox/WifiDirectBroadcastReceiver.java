@@ -5,6 +5,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.wifi.p2p.WifiP2pGroup;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.util.Log;
+
+import com.example.greybox.netservice.NetService;
 
 /*
     JSGARVEY 03/03/23 - US#206 Citations:
@@ -12,18 +15,35 @@ import android.net.wifi.p2p.WifiP2pManager;
     Sarthi Technology - https://www.youtube.com/playlist?list=PLFh8wpMiEi88SIJ-PnJjDxktry4lgBtN3
  */
 public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
+    private static final String TAG = "WifiDirectBroadcastRcvr";
+
     //Wifi P2p Manager provides specif API for managing WIFI p2p connectivity
     private WifiP2pManager mManager;
     // A P2p channel that connects the app to the WIFI p2p framework
     private WifiP2pManager.Channel mChannel;
-    // Main activity of the app
-    private MainActivity mActivity;
+    private NetService mNetService;
 
-    //Constructor taking wifi p2p manager, the channel for the receiver to monitor, and the main activity
-    public WifiDirectBroadcastReceiver(WifiP2pManager mManager, WifiP2pManager.Channel mChannel, MainActivity mActivity){
-        this.mManager = mManager; this.mChannel = mChannel; this.mActivity = mActivity;
+
+    // --------------------------------------------------------------------------------------------
+    //  Constructors
+    // --------------------------------------------------------------------------------------------
+    public WifiDirectBroadcastReceiver(WifiP2pManager mManager, WifiP2pManager.Channel mChannel, NetService netService){
+        this.mManager = mManager; this.mChannel = mChannel; this.mNetService = netService;
     }
 
+
+    // --------------------------------------------------------------------------------------------
+    //  Methods
+    // --------------------------------------------------------------------------------------------
+    public NetService getNetService() { return this.mNetService; }
+    public void setNetService(NetService netService) { this.mNetService = netService; }
+
+    // NOTE: We don't require the actions:
+    //  - WIFI_P2P_PEERS_CHANGED_ACTION. We now use NSD to connect to group owners. No need to request
+    //    the list of peers.
+    //  - WIFI_P2P_THIS_DEVICE_CHANGED_ACTION. The callback associated with this action doesn't provide
+    //    valuable information. MAC addresses are anonymized by Android at that point.
+    // https://developer.android.com/guide/topics/connectivity/wifip2p
     // onReceive receives the app context and the intent and takes necessary action depending on intent
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -31,42 +51,53 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
         // Get the type of intent of action received by broadcast receiver
         String action = intent.getAction();
 
-        // NOTE: Broadcast intent action indicating that the available peer list has changed.
-        if(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION.equals(action)){
-            //if wifi p2p manager is not null meaning there are peers to list
-            if(mManager!=null){
-                // gets a list of current peers in p2p manager
-                mManager.requestPeers(mChannel, mActivity.peerListListener);
-            }
-            // TODO: PE_CMT: https://developer.android.com/guide/topics/connectivity/wifip2p
-            //  Move this comment as part of the if below.
-        // respond to new connections or disconnections (connection changed intent)
-        }
         // NOTE: Broadcast intent action indicating that the state of Wi-Fi p2p connectivity has changed.
-        else if(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION.equals(action)){
-            // If no manager for the connection exists then return
-            if(mManager==null) { return; }
+        // respond to new connections or disconnections (connection changed intent)
+        if (WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION.equals(action)) {
+            /// PE_DBG_TMP
+            Log.d(TAG, "*** WIFI_P2P_CONNECTION_CHANGED_ACTION start");
+            ///
 
-            mManager.requestConnectionInfo(mChannel, mActivity.connectionInfoListener);
+            // If no manager for the connection exists then return
+            if (mManager == null) { return; }
 
             WifiP2pGroup group = intent.getParcelableExtra(WifiP2pManager.EXTRA_WIFI_P2P_GROUP);
+
             if (group != null) {
                 // Use the group object to retrieve group information
-                String ownerAddress = group.getOwner().deviceAddress;
-                String ssid = group.getNetworkName();
-                String passphrase = group.getPassphrase();
-                // Do something with the retrieved group information
-                mManager.requestGroupInfo(mChannel, mActivity.groupInfoListener);
+                Log.d(TAG, "Group found.");
+                Log.d(TAG, "isGO:      " + group.isGroupOwner());
+                Log.d(TAG, "ownerAddr: " + group.getOwner().deviceAddress); // fake info
+                Log.d(TAG, "ssid:      " + group.getNetworkName());
+                Log.d(TAG, "pass:      " + group.getPassphrase());
+
+                Log.d(TAG, "mChannel: " + mChannel);
+                Log.d(TAG, "mNetService: " + mNetService);
+                Log.d(TAG, "getConnectionInfoListener: " + mNetService.getConnectionInfoListener());
+
+                // NOTE: `connectionInfoListener` performs the socket connection
+                mManager.requestConnectionInfo(mChannel, mNetService.getConnectionInfoListener());
+
+                // NOTE: `getGroupInfoListener` performs the update of clients
+                mManager.requestGroupInfo(mChannel, mNetService.getGroupInfoListener());
             }
-        // TODO: PE_CMT: https://developer.android.com/guide/topics/connectivity/wifip2p
-        //  Move this comment as part of the if below.
-        // respond to this device's wifi state changing
+
+            /// PE_DBG_TMP
+            Log.d(TAG, "*** WIFI_P2P_CONNECTION_CHANGED_ACTION end");
+            ///
+        } else if (WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)) {
+            /// PE_DBG_TMP
+            Log.d(TAG, "*** WIFI_P2P_THIS_DEVICE_CHANGED_ACTION start");
+            ///
+            // We use this intent to set the name of the own device
+            // TODO: we try to use the bluetooth name in NetService. It's better to avoid an async
+            //  call that can screw up the information, but not sure it will work
+            //            mManager.requestDeviceInfo(mChannel, mNetService.get);
+            /// PE_DBG_TMP
+            Log.d(TAG, "*** WIFI_P2P_THIS_DEVICE_CHANGED_ACTION end");
+            ///
         }
-        // TODO: PE_CMT: https://developer.android.com/guide/topics/connectivity/wifip2p
-        //  Broadcast when a device's details have changed, such as the device's name.
-        else if(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION.equals(action)){
-            mManager.requestDeviceInfo(mChannel, mActivity.deviceInfoListener);
-        }
+
     }
 
 
