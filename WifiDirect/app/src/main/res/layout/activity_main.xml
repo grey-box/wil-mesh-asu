@@ -8,22 +8,18 @@
     android:fillViewport="true"
     tools:context=".MainActivity">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
-            <com.google.android.material.switchmaterial.SwitchMaterial
-                android:id="@+id/connectBtn"
-                style="?attr/materialSwitchStyle"
-                android:checked="false"
+            <TextView
+                android:id="@+id/appTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/connect_switch"
-                android:textSize="20sp"
-                app:layout_constraintHorizontal_bias="0.5"
-                app:layout_constraintEnd_toStartOf="@+id/deviceModeToggleGroup"
+                android:text="Projet Mesh"
+                android:textSize="24sp"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent"/>
 
             <com.google.android.material.button.MaterialButtonToggleGroup
                 android:id="@+id/deviceModeToggleGroup"
@@ -31,10 +27,8 @@
                 android:layout_height="wrap_content"
                 app:singleSelection="true"
                 app:checkedButton="@id/clientModeBtn"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.5"
-                app:layout_constraintStart_toEndOf="@id/connectBtn"
-                app:layout_constraintTop_toTopOf="parent">
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/appTitle">
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/clientModeBtn"
@@ -51,9 +45,23 @@
                     android:layout_height="wrap_content"
                     android:text="@string/ap_mode_toggle"
                     android:textSize="20sp" />
+
             </com.google.android.material.button.MaterialButtonToggleGroup>
 
-            <TextView
+            <com.google.android.material.switchmaterial.SwitchMaterial
+                android:id="@+id/connectBtn"
+                style="?attr/materialSwitchStyle"
+                android:checked="false"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/connect_switch"
+                android:textSize="20sp"
+                android:layout_marginStart="16dp"c
+                app:layout_constraintStart_toEndOf="@id/deviceModeToggleGroup"
+                app:layout_constraintTop_toBottomOf="@id/appTitle"/>
+
+
+        <TextView
                 android:id="@+id/connectionStatus"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Greybox</string>
+    <string name="app_name">Project Mesh</string>
 
     <string name="connect_switch">Connect</string>
     <string name="device_mode_label">Mode</string>
