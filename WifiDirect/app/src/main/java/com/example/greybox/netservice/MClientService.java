@@ -60,6 +60,8 @@ public class MClientService extends NetService {
     public void stop() {
         if (mNetSock == null) return;
         mNetSock.closeSocket();
+        // Manually update the UI. Pass in an empty ArrayList since we don't keep a list to pass
+        getClientListUiCallback().updateClientsUi(new ArrayList<>());
     }
 
     @Override
