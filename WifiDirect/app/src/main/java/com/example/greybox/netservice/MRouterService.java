@@ -52,14 +52,26 @@ public class MRouterService extends NetService {
         // NOTE: try to remove any existing group. This prevents a problem related to busy framework
         super.wfdModule.tearDown();
         super.wfdModule.createSoftAP();
+/*<<<<<<< HEAD
         // Appel de la méthode commune pour démarrer la connexion
+=======
+        // Manually add the GO to the list of clients and update the UI
+        addClient(this.getDevice());
+        getClientListUiCallback().updateClientsUi(groupClients);
+>>>>>>> 9676fbe7d56b88a7052135510941083914b90af6*/
     }
 
     @Override
     public void stop() {
         if (mNetSock == null) return;
         mNetSock.closeServerSocket();
+/*<<<<<<< HEAD
         // Appel de la méthode commune pour arrêter la connexion
+=======
+        groupClients.clear();
+        // Manually update the UI
+        getClientListUiCallback().updateClientsUi(groupClients);
+>>>>>>> 9676fbe7d56b88a7052135510941083914b90af6*/
     }
 
 
