@@ -35,7 +35,6 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
     // --------------------------------------------------------------------------------------------
     //  Methods
     // --------------------------------------------------------------------------------------------
-    public NetService getNetService() { return this.mNetService; }
     public void setNetService(NetService netService) { this.mNetService = netService; }
 
     // NOTE: We don't require the actions:
@@ -59,26 +58,24 @@ public class WifiDirectBroadcastReceiver extends BroadcastReceiver {
             ///
 
             // If no manager for the connection exists then return
-            if (mManager == null) { return; }
+            if (mManager == null) {
+                Log.e(TAG, "mManager is null");
+                return;
+            }
 
             WifiP2pGroup group = intent.getParcelableExtra(WifiP2pManager.EXTRA_WIFI_P2P_GROUP);
 
-            if (group != null) {
+            if (group == null) {
+                Log.e(TAG, "Group is null");
+                return;
+            }{
                 // Use the group object to retrieve group information
-                Log.d(TAG, "Group found.");
-                Log.d(TAG, "isGO:      " + group.isGroupOwner());
-                Log.d(TAG, "ownerAddr: " + group.getOwner().deviceAddress); // fake info
-                Log.d(TAG, "ssid:      " + group.getNetworkName());
-                Log.d(TAG, "pass:      " + group.getPassphrase());
+                Log.d(TAG, "Group found. isGO: " + group.isGroupOwner() +
+                        ", ownerAddr: " + group.getOwner().deviceAddress +
+                        ", ssid: " + group.getNetworkName() +
+                        ", pass: " + group.getPassphrase());
 
-                Log.d(TAG, "mChannel: " + mChannel);
-                Log.d(TAG, "mNetService: " + mNetService);
-                Log.d(TAG, "getConnectionInfoListener: " + mNetService.getConnectionInfoListener());
-
-                // NOTE: `connectionInfoListener` performs the socket connection
                 mManager.requestConnectionInfo(mChannel, mNetService.getConnectionInfoListener());
-
-                // NOTE: `getGroupInfoListener` performs the update of clients
                 mManager.requestGroupInfo(mChannel, mNetService.getGroupInfoListener());
             }
 

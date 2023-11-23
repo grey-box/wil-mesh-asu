@@ -9,10 +9,12 @@
     <string name="discover_btn">Discover</string>
     <string name="group_info_btn">Group info</string>
     <string name="devices_list_label">Connected devices</string>
+    <string name="title_activity_chat">Chat</string>
     <string name="received_msg_label">Received message</string>
     <string name="message_read_default">Message</string>
     <string name="write_msg_default">Write message</string>
     <string name="send_btn">Send</string>
+    <string name="send">Send</string>
 
     <!-- Error messages -->
     <string name="error_fragment_message">An error occurred</string>

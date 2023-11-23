@@ -13,6 +13,7 @@ import com.example.greybox.WfdNetManagerService;
 import com.example.greybox.meshmessage.MeshMessage;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.UUID;
 
 public abstract class NetService {
@@ -28,6 +29,8 @@ public abstract class NetService {
     protected GroupInfoUiCallback groupInfoUiCallback;
     protected MessageTextUiCallback messageTextUiCallback;
     private MeshDevice device;  // The representation of the device this NetService is running on
+    private HashMap<UUID, MeshDevice> deviceList = new HashMap<>();
+
 
 
     // --------------------------------------------------------------------------------------------
@@ -39,6 +42,7 @@ public abstract class NetService {
         void updateClientsUi(ArrayList<MeshDevice> clients);
         ///
     }
+
 
     public interface GroupInfoUiCallback {
         void updateGroupInfoUi(WifiP2pGroup wifiP2pGroup);
@@ -60,6 +64,7 @@ public abstract class NetService {
         //  WifiDirectBroadcastReceiver class when processing WIFI_P2P_THIS_DEVICE_CHANGED_ACTION
         this.device.setDeviceName(Settings.Secure.getString(context.getContentResolver(), "bluetooth_name"));
         Log.d(TAG, " deviceName: " + this.device.getDeviceName());
+        this.deviceList = new HashMap<>();
     }
 
     // --------------------------------------------------------------------------------------------
@@ -99,6 +104,8 @@ public abstract class NetService {
     // --------------------------------------------------------------------------------------------
     //  Abstract methods
     // --------------------------------------------------------------------------------------------
+
+
     public abstract void start();
 
     public abstract void stop();

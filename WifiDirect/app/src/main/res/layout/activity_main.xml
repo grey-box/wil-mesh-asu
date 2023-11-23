@@ -56,7 +56,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/connect_switch"
                 android:textSize="20sp"
-                android:layout_marginStart="16dp"c
+                android:layout_marginStart="16dp"
                 app:layout_constraintStart_toEndOf="@id/deviceModeToggleGroup"
                 app:layout_constraintTop_toBottomOf="@id/appTitle"/>
 
@@ -123,6 +123,7 @@
                 app:layout_constraintHorizontal_bias="0.5"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/textView" />
+
 
             <TextView
                 android:id="@+id/textView3"

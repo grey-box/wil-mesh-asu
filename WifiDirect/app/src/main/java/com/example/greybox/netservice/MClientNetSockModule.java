@@ -22,16 +22,19 @@ public class MClientNetSockModule implements Runnable {
     private Handler handler;
     private int portNum;
     private ObjectSocketCommunication socketComm;
+    private MClientService clientService;
 
     // --------------------------------------------------------------------------------------------
     //  Constructors
     // --------------------------------------------------------------------------------------------
-    public MClientNetSockModule(InetAddress hostAddress, Handler handler, int portNum){
+    public MClientNetSockModule(InetAddress hostAddress, Handler handler, int portNum, MClientService clientService){
         this.hostAddress = hostAddress;
         socket = new Socket();
         this.handler = handler;
         this.portNum = portNum;
+        this.clientService = clientService;
         Log.d(TAG, "handler: " + handler);
+
     }
 
 
@@ -57,6 +60,12 @@ public class MClientNetSockModule implements Runnable {
             Log.d(TAG, "  getLocalSocketAddress: " + socket.getLocalSocketAddress()); // Returns the address of the endpoint this socket is bound to.
             Log.d(TAG, "  MAC address:           " + WfdNetManagerService.getMacFromLocalIpAddress(socket.getLocalAddress()));
 
+            // Si la connexion est réussie, informez le service client
+            if (socket.isConnected()) {
+                Log.d(TAG, "Client connected, notifying MClientService");
+                // Utilisez le service client pour appeler le callback
+                clientService.onConnectionInfoReceived(hostAddress.getHostAddress(), portNum);
+            }
         } catch (IOException e) {
             Log.e(TAG, "Error during connection.");
             closeSocket();
@@ -71,6 +80,14 @@ public class MClientNetSockModule implements Runnable {
         ExecutorService executorService = Executors.newSingleThreadExecutor();
         Log.d(TAG, "Creating thread communicate (read).");
         executorService.execute(socketComm);
+
+        // Dans MClientNetSockModule, méthode run()
+        if (socket.isConnected()) {
+            Log.d(TAG, "Client connected, notifying MClientService");
+            // Informez MClientService en utilisant l'instance passée dans le constructeur
+            this.clientService.onConnectionInfoReceived(hostAddress.getHostAddress(), portNum);
+        }
+
     }
 
     public void write(MeshMessage msg) {

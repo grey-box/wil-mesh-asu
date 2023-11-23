@@ -1,17 +1,18 @@
 package com.example.greybox;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pGroup;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
@@ -25,7 +26,6 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.FragmentActivity;
 
 import com.example.greybox.meshmessage.MeshMessage;
-import com.example.greybox.meshmessage.MeshMessageType;
 import com.example.greybox.netservice.MClientService;
 import com.example.greybox.netservice.MRouterService;
 import com.example.greybox.netservice.NetService;
@@ -39,8 +39,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 
 /*
@@ -75,14 +73,19 @@ public class MainActivity extends FragmentActivity {
     IntentFilter mIntentFilter;
 
     private NetService mNetService;
+    public static NetService sNetService;
 
     WfdNetManagerService wfdNetManagerService;
     Handler uiHandler;
 
     private MeshDevice msgDstDevice;        // Destination device of the message
     private ArrayList<MeshDevice> groupClientsList = new ArrayList<>();  // List of the connected devices in the group. Used to get the MAC address
+    public static ArrayList<MeshDevice> sgroupClientsList = new ArrayList<>();
+    public static MeshDevice remoteDevice;
     private String[] groupClientsNames;     // List of devices names to be displayed on the UI
+
     private boolean isAP = false;
+    private CustomAdapter customAdapter;
 
 
     //imported override method onCreate. Initialize the the activity.
@@ -118,6 +121,11 @@ public class MainActivity extends FragmentActivity {
         connectButton = findViewById(R.id.connectBtn);
         deviceModeToggleGroup = findViewById(R.id.deviceModeToggleGroup);
 
+        groupClientsList = new ArrayList<>();
+        //groupClientsList.add(new MeshDevice("Group chat"));
+        customAdapter = new CustomAdapter(this, groupClientsList);
+        listView.setAdapter(customAdapter);
+
         // create wifi p2p manager providing the API for managing Wifi peer-to-peer connectivity
         mManager = (WifiP2pManager) getApplicationContext().getSystemService(Context.WIFI_P2P_SERVICE);
         // a channel that connects the app to the wifi p2p framework.
@@ -133,6 +141,7 @@ public class MainActivity extends FragmentActivity {
 
         Log.d(TAG, "Creating WfdNetManagerService");
         wfdNetManagerService = new WfdNetManagerService(mManager, mChannel);
+
 
         // TODO: it would be better if the messages are processed by the NetService (Router and Client)
         uiHandler = new Handler(getMainLooper(), new Handler.Callback() {
@@ -179,6 +188,7 @@ public class MainActivity extends FragmentActivity {
         });
     }
 
+
     // implemented method for app object action listeners
     private void setListeners(){
         connectButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -187,8 +197,11 @@ public class MainActivity extends FragmentActivity {
                     deviceModeToggleGroup.setEnabled(false);
                     if (isAP) {
                         mNetService = new MRouterService(getApplicationContext(), wfdNetManagerService, uiHandler);
+                        sNetService = mNetService;
+
                     } else {
                         mNetService = new MClientService(getApplicationContext(), wfdNetManagerService, uiHandler);
+                        sNetService = mNetService;
                     }
 
                     mNetService.setClientListUiUpdateCallback(updateClientsListCallback);
@@ -272,12 +285,7 @@ public class MainActivity extends FragmentActivity {
         btnDiscover.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // NOTE: Here we use the button to start the broadcast and discover manually if the first
-                //  automatic discovery failed.
 
-                // NOTE: Need another way to distinguish between group owner and client. Maybe this
-                //  is part of a refactor and it should be done within the MRouterService/MClientService
-                //  classes
                 if (wfdNetManagerService._isGO) {
                     Log.d(TAG, " btnDiscover onClick: No action.");
                 } else {
@@ -288,86 +296,72 @@ public class MainActivity extends FragmentActivity {
             }
         });
 
-        //Name of discovered peer turned into a button in the listView
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                // We only update the destination device of the message
-                msgDstDevice = groupClientsList.get(i);
-                Log.d(TAG, "Selected destination device: " + msgDstDevice);
-            }
-        });
-
-        // Send button listener to send text message between peers
-        btnSend.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (msgDstDevice == null) {
-                    Log.i(TAG, "Null recipient.");
-                    Toast.makeText(getApplicationContext(), "Select a recipient from the list", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                String msg = writeMsg.getText().toString();
-                if (msg.isEmpty()) {
-                    Log.i(TAG, "Empty message.");
-                    Toast.makeText(getApplicationContext(), "Write a message", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                ExecutorService executor = Executors.newSingleThreadExecutor();
-                executor.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        // TODO: right now we only support one destination device
-                        ArrayList<UUID> dstList = new ArrayList<>(1);
-                        dstList.add(msgDstDevice.getDeviceId());
-
-                        MeshMessage meshMessage = new MeshMessage(MeshMessageType.DATA_SINGLE_CLIENT,
-                                msg,
-                                dstList);
-                        mNetService.sendMessage(meshMessage);
+        listView.setOnItemClickListener((adapterView, view, position, id) -> {
+            try {
+                if (position == 0) {
+                    ArrayList<String> uuids = new ArrayList<>();
+                    if (groupClientsList.size() > 0) {
+                        for (MeshDevice device : groupClientsList) {
+                            if (device.getDeviceId() != null) {
+                                uuids.add(device.getDeviceId().toString());
+                            }
+                        }
                     }
-                });
+                    Log.d("MainActivity", "Group chat selected with UUIDs: " + uuids);
+                    if (!uuids.isEmpty()) {
+                        UUID localDeviceUUID = sNetService.getDevice().getDeviceId();
+                        Intent chatIntent = new Intent(MainActivity.this, ChatActivity.class);
+                        chatIntent.putStringArrayListExtra("GROUP_DEVICE_IDS", uuids);
+                        if (localDeviceUUID != null) {
+                            chatIntent.putExtra("LOCAL_DEVICE_UUID", localDeviceUUID.toString());
+                        }
+                        startActivity(chatIntent);
+                    } else {
+                        Toast.makeText(MainActivity.this, "Aucun appareil connecté pour le chat de groupe.", Toast.LENGTH_SHORT).show();
+                    }
+                }else { // Clic sur un dispositif individuel
+                    int adjustedPosition = position - 1;
+                    MeshDevice selectedDevice = groupClientsList.get(adjustedPosition);
+                    Log.d("MainActivity", "Individual device selected: " + selectedDevice.getDeviceName());
+                    Intent chatIntent = new Intent(MainActivity.this, ChatActivity.class);
+                    chatIntent.putExtra("DEVICE_ID", selectedDevice.getDeviceId().toString());
+                    chatIntent.putExtra("REMOTE_DEVICE_NAME", selectedDevice.getDeviceName());
+                    startActivity(chatIntent);
+                }
+            } catch (Exception e) {
+                Log.e("MainActivity", "Exception in ListView item click", e);
             }
         });
-    }
 
-    // TODO: this is not the correct way to do this. It's just to save development time. The best
-    //  would be to use the MVVM model to deal with UI updates. Also, if we use lists, we should use
-    //  the RecyclerView element in our UI.
-    /*
-     * This method will give a new use to the `peerList`, `deviceNameArray` and `deviceArray` and
-     * their related UI view, given that with the automatic connection feature we no longer use the
-     * peerList to display the possible peers
-     */
-     NetService.ClientListUiCallback updateClientsListCallback = new NetService.ClientListUiCallback() {
+
+    }
+    NetService.ClientListUiCallback updateClientsListCallback = new NetService.ClientListUiCallback() {
         @Override
         public void updateClientsUi(ArrayList<MeshDevice> clients) {
-            Log.d(TAG, "Updating client list");
-            Log.d(TAG, "List of clients received: " + clients);
-            groupClientsList.clear();
-            groupClientsList.addAll(new ArrayList<>(clients));
-
-            // store the device names to be display
-            groupClientsNames = new String[clients.size()];
-            Log.d(TAG, "Number of clients: " + clients.size());
-
-            // Append " : GO" to the name if the device is a GO.
-            for (int i = 0; i < clients.size(); ++i) {
-                groupClientsNames[i] = groupClientsList.get(i).getDeviceName() + " - " + groupClientsList.get(i).getDeviceId();
-                if (groupClientsList.get(i).isGo()) {
-                    groupClientsNames[i] += " - GO";
-                }
+            Log.d(TAG, "Updating client list. Number of clients: " + clients.size());
+            for (MeshDevice client : clients) {
+                Log.d(TAG, "Client: " + client.getDeviceName() + ", UUID: " + client.getDeviceId());
             }
 
-            // TODO: RecyclerView is now preferred instead of ListView.
-            // add all the device names to an adapter then add the adapter to the layout listview
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(getApplicationContext(),
-                    android.R.layout.simple_list_item_1,
-                    groupClientsNames);
-            listView.setAdapter(adapter);
+            // Créer une nouvelle liste temporaire pour stocker les clients
+            ArrayList<MeshDevice> updatedList = new ArrayList<>();
+
+            // Ajouter "Group chat" en premier
+            //updatedList.add(new MeshDevice("Group chat"));
+
+            // Ajouter les nouveaux clients à la liste temporaire
+            updatedList.addAll(clients);
+
+            // Remplacer groupClientsList par la liste mise à jour
+            groupClientsList.clear();
+            groupClientsList.addAll(updatedList);
+
+            // Mettre à jour l'adaptateur
+            customAdapter.notifyDataSetChanged();
         }
+
+
+
     };
 
 
@@ -445,7 +439,9 @@ public class MainActivity extends FragmentActivity {
 //        connection.tearDown();
         ///
         if (mNetService != null) mNetService.stop();
-        mChannel.close();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            mChannel.close();
+        }
         super.onDestroy();
     }
 }

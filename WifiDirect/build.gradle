@@ -1,5 +1,31 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
+buildscript {
+    ext.kotlin_version = '1.7.10' // Assurez-vous d'utiliser la dernière version de Kotlin
+
+    repositories {
+        google()
+        mavenCentral()
+        maven { url 'https://jitpack.io' } // Ajout du dépôt JitPack
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.1.1'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
 plugins {
-    id 'com.android.application' version '8.0.2' apply false
-    id 'com.android.library' version '8.0.2' apply false
+    id 'com.android.application' version '8.1.1' apply false
+    id 'com.android.library' version '8.1.1' apply false
+}
+
+// Ce bloc s'assure que le dépôt JitPack est accessible à tous les modules du projet
+allprojects {
+    repositories {
+
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
 }

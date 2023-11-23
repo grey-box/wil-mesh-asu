@@ -165,15 +165,21 @@ public class WfdDnsSdManager {
                 ConnectionData connectionData = gosData.get(deviceInfo.deviceAddress);
                 if (connectionData != null) {
                     // Builder used to build WifiP2pConfig objects for creating or joining a group.
-                    WifiP2pConfig.Builder configBuilder = new WifiP2pConfig.Builder();
+                    WifiP2pConfig.Builder configBuilder = null;
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                        configBuilder = new WifiP2pConfig.Builder();
+                    }
 
                     Log.d(TAG, "ConnectionData.getSsid(): " + connectionData.getSsid());
                     Log.d(TAG, "ConnectionData.getPass(): " + connectionData.getPass());
 
-                    WifiP2pConfig config = configBuilder
-                            .setNetworkName(connectionData.getSsid())
-                            .setPassphrase(connectionData.getPass())
-                            .build();
+                    WifiP2pConfig config = null;
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                        config = configBuilder
+                                .setNetworkName(connectionData.getSsid())
+                                .setPassphrase(connectionData.getPass())
+                                .build();
+                    }
 
                     manager.connect(channel, config, new ActionListener() {
 

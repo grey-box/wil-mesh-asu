@@ -52,13 +52,16 @@ public class MRouterService extends NetService {
         // NOTE: try to remove any existing group. This prevents a problem related to busy framework
         super.wfdModule.tearDown();
         super.wfdModule.createSoftAP();
+        // Appel de la méthode commune pour démarrer la connexion
     }
 
     @Override
     public void stop() {
         if (mNetSock == null) return;
         mNetSock.closeServerSocket();
+        // Appel de la méthode commune pour arrêter la connexion
     }
+
 
     @Override
     public void sendMessage(MeshMessage msg) {
@@ -161,6 +164,8 @@ public class MRouterService extends NetService {
                 break;
         }
     }
+
+
 
 
     // --------------------------------------------------------------------------------------------

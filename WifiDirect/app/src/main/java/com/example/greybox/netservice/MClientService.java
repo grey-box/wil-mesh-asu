@@ -1,17 +1,14 @@
 package com.example.greybox.netservice;
 
 import static com.example.greybox.meshmessage.MeshMessageType.NEW_CLIENT_SOCKET_CONNECTION;
-
 import android.content.Context;
 import android.net.wifi.p2p.WifiP2pDevice;
-import android.net.wifi.p2p.WifiP2pDeviceList;
 import android.net.wifi.p2p.WifiP2pGroup;
 import android.net.wifi.p2p.WifiP2pInfo;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
-
 import androidx.annotation.Nullable;
 
 import com.example.greybox.MeshDevice;
@@ -122,6 +119,17 @@ public class MClientService extends NetService {
     // --------------------------------------------------------------------------------------------
     //  Callbacks / Listeners
     // --------------------------------------------------------------------------------------------
+    // Callback interface pour les informations de connexion
+    public interface ConnectionInfoReceivedListener {
+        void onConnectionInfoReceived(String deviceAddress, int port);
+    }
+
+    private ConnectionInfoReceivedListener connectionInfoReceivedListener;
+
+    public void setConnectionInfoReceivedListener(ConnectionInfoReceivedListener listener) {
+        this.connectionInfoReceivedListener = listener;
+    }
+
     WifiP2pManager.ConnectionInfoListener connectionInfoListener = new WifiP2pManager.ConnectionInfoListener() {
         // If the connection info is available
         @Override
@@ -138,16 +146,16 @@ public class MClientService extends NetService {
                 return;
             }
 
-            // TODO: The port should be read from the information received from the service discovery
-            final int PORT = 8888;
-            ///
+            final int PORT = 8888; // TODO: remplacer par la logique de récupération du port dynamiquement
 
-            // Once the connection info is ready, create the sockets depending on the role of the device
             if (mNetSock == null) {
-                mNetSock = new MClientNetSockModule(groupOwnerAddress, externalHandler, PORT);
+                mNetSock = new MClientNetSockModule(groupOwnerAddress, externalHandler, PORT, MClientService.this);
                 Log.d(TAG, "Starting client thread");
                 ExecutorService executorService = Executors.newSingleThreadExecutor();
                 executorService.execute(mNetSock);
+
+                // Informez le listener que les informations de connexion sont disponibles
+                onConnectionInfoReceived(groupOwnerAddress.getHostAddress(), PORT);
             }
         }
     };
@@ -181,6 +189,12 @@ public class MClientService extends NetService {
             }
         }
     };
+
+    public void onConnectionInfoReceived(String deviceAddress, int port) {
+        if(connectionInfoReceivedListener != null) {
+            connectionInfoReceivedListener.onConnectionInfoReceived(deviceAddress, port);
+        }
+    }
 
     // TODO: this listener could be used to obtain the device name. Still evaluating if using the
     //  current method (bluetooth name obtained in the NetService constructor) is better since we
