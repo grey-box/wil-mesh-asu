@@ -6,6 +6,7 @@ public enum MeshMessageType {
     DATA_ALL_NETWORK,
     CMD_SINGLE_CLIENT,
     CMD_ALL_NETWORK,
+    FILE_TRANSFER,
 
     //
     NEW_CLIENT_SOCKET_CONNECTION,

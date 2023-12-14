@@ -28,8 +28,11 @@ public abstract class NetService {
     protected ClientListUiCallback clientListUiCallback;
     protected GroupInfoUiCallback groupInfoUiCallback;
     protected MessageTextUiCallback messageTextUiCallback;
+    protected FileReceivedUiCallback fileReceivedUiCallback;
+
     private MeshDevice device;  // The representation of the device this NetService is running on
     private HashMap<UUID, MeshDevice> deviceList = new HashMap<>();
+
 
 
 
@@ -38,7 +41,6 @@ public abstract class NetService {
     // --------------------------------------------------------------------------------------------
     public interface ClientListUiCallback {
         /// testing
-//        void updateClientsUi(HashMap<String, MeshDevice> clients);
         void updateClientsUi(ArrayList<MeshDevice> clients);
         ///
     }
@@ -51,6 +53,10 @@ public abstract class NetService {
     public interface MessageTextUiCallback {
         void updateMessageTextUiCallback(String msgText);
     }
+    public interface FileReceivedUiCallback {
+        void updateFileReceivedUi(byte[] fileBytes, String fileName);
+    }
+
 
 
     // --------------------------------------------------------------------------------------------
@@ -87,6 +93,9 @@ public abstract class NetService {
     public GroupInfoUiCallback getGroupInfoUiCallback() { return groupInfoUiCallback; }
 
     public MessageTextUiCallback getMessageTextUiCallback() { return messageTextUiCallback; }
+    public FileReceivedUiCallback getFileReceivedUiCallback() {
+        return fileReceivedUiCallback;
+    }
 
     public MeshDevice getDevice() { return this.device; }
 
@@ -101,6 +110,10 @@ public abstract class NetService {
 
     public void setMessageTextUiCallback(MessageTextUiCallback cb) { this.messageTextUiCallback = cb; }
 
+    public void setFileReceivedUiCallback(FileReceivedUiCallback cb) {
+        this.fileReceivedUiCallback = cb;
+    }
+
     // --------------------------------------------------------------------------------------------
     //  Abstract methods
     // --------------------------------------------------------------------------------------------
@@ -113,4 +126,6 @@ public abstract class NetService {
     public abstract void sendMessage(MeshMessage msg);
 
     public abstract void handleThreadMessage(Message msg);
+    public abstract void sendFile(MeshMessage fileMessage);
+
 }

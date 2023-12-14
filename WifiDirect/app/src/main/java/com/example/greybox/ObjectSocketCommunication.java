@@ -102,6 +102,22 @@ public class ObjectSocketCommunication implements Runnable {
         });
     }
 
+    public void writeFile(MeshMessage msg) {
+        workerHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Log.d(TAG, "Writing file message: " + msg);
+                    Log.d(TAG, " objectOutputStream: " + objectOutputStream);
+                    objectOutputStream.reset(); // Important pour éviter les références arrière
+                    objectOutputStream.writeObject(msg);
+                } catch (IOException e) {
+                    Log.e(TAG, "Exception while writing file to output stream.", e);
+                }
+            }
+        });
+    }
+
     public void close() {
         Log.d(TAG, "Closing socket.");
         safeClose(objectOutputStream);

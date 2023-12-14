@@ -15,13 +15,16 @@ import com.example.greybox.MeshDevice;
 import com.example.greybox.ThreadMessageTypes;
 import com.example.greybox.WfdNetManagerService;
 import com.example.greybox.WfdStatusInterpreter;
+import com.example.greybox.meshmessage.FilePayload;
 import com.example.greybox.meshmessage.MeshMessage;
 import com.example.greybox.meshmessage.MeshMessageType;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
+
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -33,12 +36,15 @@ public class MRouterService extends NetService {
     private MRouterNetSockModule mNetSock;
 
     private ArrayList<MeshDevice> groupClients = new ArrayList<>();
+    private Context context;
+
 
     // --------------------------------------------------------------------------------------------
     //  Constructors
     // --------------------------------------------------------------------------------------------
     public MRouterService(Context context, WfdNetManagerService wfd, Handler handler) {
         super(context, wfd, handler);
+        this.context = context;
     }
 
 
@@ -52,33 +58,28 @@ public class MRouterService extends NetService {
         // NOTE: try to remove any existing group. This prevents a problem related to busy framework
         super.wfdModule.tearDown();
         super.wfdModule.createSoftAP();
-/*<<<<<<< HEAD
-        // Appel de la méthode commune pour démarrer la connexion
-=======
-        // Manually add the GO to the list of clients and update the UI
-        addClient(this.getDevice());
-        getClientListUiCallback().updateClientsUi(groupClients);
->>>>>>> 9676fbe7d56b88a7052135510941083914b90af6*/
+
     }
 
     @Override
     public void stop() {
         if (mNetSock == null) return;
         mNetSock.closeServerSocket();
-/*<<<<<<< HEAD
-        // Appel de la méthode commune pour arrêter la connexion
-=======
-        groupClients.clear();
-        // Manually update the UI
-        getClientListUiCallback().updateClientsUi(groupClients);
->>>>>>> 9676fbe7d56b88a7052135510941083914b90af6*/
+
     }
 
 
     @Override
     public void sendMessage(MeshMessage msg) {
-        mNetSock.write(msg);
+        if (msg.getMsgType() == MeshMessageType.FILE_TRANSFER) {
+            sendFile(msg);
+        } else {
+            mNetSock.write(msg);
+        }
     }
+    @Override
+    public void sendFile(MeshMessage fileMessage) {   mNetSock.writeFile(fileMessage);  }
+
 
     private void addClient(MeshDevice newClient) {
         Log.d(TAG, "addClient");
@@ -160,6 +161,34 @@ public class MRouterService extends NetService {
                             sendMessage(meshMsg);
                         }
                         break;
+                    case FILE_TRANSFER:
+                        Log.d(TAG, "FILE_TRANSFER");
+                        Log.d(TAG, "dstDevices: \n" + meshMsg.getDstDevices());
+
+                        // We currently support only one recipient
+                        UUID frecipientId = meshMsg.getDstDevices().get(0);
+                        Log.d(TAG, "frecipientId: " + frecipientId);
+
+                        if (frecipientId == null) {
+                            return;
+                        }
+
+                        Log.d(TAG, "deviceId: " + getDevice().getDeviceId());
+                        if (frecipientId.equals(getDevice().getDeviceId())) {
+                            FilePayload filePayload = (FilePayload) meshMsg.getData();
+                            if (filePayload != null) {
+                                byte[] fileData = filePayload.getFileData();
+                                String fileName = filePayload.getFileName();
+                                if (getFileReceivedUiCallback() != null) {
+                                    getFileReceivedUiCallback().updateFileReceivedUi(fileData, fileName);
+                                }
+                            } else {
+                                Log.e(TAG, "Le payload du message n'est pas de type FilePayload.");
+                            }
+                        }
+                        break;
+
+
                     case CLIENT_LIST:
                         // The GO updates the list of devices in NEW_CLIENT_SOCKET_CONNECTION.
                         // TODO: maybe this will change if we receive the list of another group

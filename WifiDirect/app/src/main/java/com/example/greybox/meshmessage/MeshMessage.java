@@ -8,11 +8,12 @@ import androidx.annotation.NonNull;
 
 import com.example.greybox.MeshDevice;
 
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.UUID;
 
-public class MeshMessage implements Serializable {
+public class MeshMessage implements Serializable{
 
     /// NOTE: these fields are mentioned in the article
     private final UUID msgId;
@@ -23,6 +24,7 @@ public class MeshMessage implements Serializable {
     ///
     // This is not included in the article. Authors don't specify how to send a message to a specific device
     private ArrayList<UUID> dstDevices;
+    private MeshDevice author; // Votre classe Author qui implémente IUser
 
 
     // --------------------------------------------------------------
@@ -34,6 +36,7 @@ public class MeshMessage implements Serializable {
         this.payload = payload;
         this.dstDevices = dstDevices;
     }
+
 
     // --------------------------------------------------------------
     //  Getters and setters
@@ -62,7 +65,6 @@ public class MeshMessage implements Serializable {
         return payload;
     }
 
-    // --------------------------------------------------------------
 
 
     @NonNull
@@ -78,6 +80,11 @@ public class MeshMessage implements Serializable {
                 case DATA_SINGLE_CLIENT:
                     // So far, the payload for this type is a string
                     res.append((String) getData()).append("\n");
+                    break;
+                case FILE_TRANSFER:
+                    FilePayload filePayload = (FilePayload) payload;
+                    res.append("File Name: ").append(filePayload.getFileName()).append("\n");
+                    res.append("File Size: ").append(filePayload.getFileData().length).append("\n");
                     break;
                 case CLIENT_LIST:
                     /// testing

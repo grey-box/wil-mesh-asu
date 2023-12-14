@@ -3,9 +3,9 @@ buildscript {
     ext.kotlin_version = '1.7.10' // Assurez-vous d'utiliser la dernière version de Kotlin
 
     repositories {
-        google()
+       /* google()
         mavenCentral()
-        maven { url 'https://jitpack.io' } // Ajout du dépôt JitPack
+        maven { url 'https://jitpack.io' }*/
     }
 
     dependencies {
@@ -19,10 +19,11 @@ plugins {
     id 'com.android.library' version '8.1.1' apply false
 }
 
-// Ce bloc s'assure que le dépôt JitPack est accessible à tous les modules du projet
 allprojects {
     repositories {
-
+       /* google()
+        mavenCentral()
+        maven { url 'https://jitpack.io' }*/
     }
 }
 

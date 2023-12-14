@@ -91,7 +91,13 @@ public class MClientNetSockModule implements Runnable {
     }
 
     public void write(MeshMessage msg) {
+        Log.d(TAG, "Writing to: " +socketComm.getObjectOutputStream());
         socketComm.write(msg);
+    }
+
+    public void writeFile(MeshMessage msg) {
+        Log.d(TAG, "Writing to: " +socketComm.getObjectOutputStream());
+        socketComm.writeFile(msg);
     }
 
     public void closeSocket() {

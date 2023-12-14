@@ -15,9 +15,13 @@ import com.example.greybox.MeshDevice;
 import com.example.greybox.ThreadMessageTypes;
 import com.example.greybox.WfdNetManagerService;
 import com.example.greybox.WfdStatusInterpreter;
+import com.example.greybox.meshmessage.FilePayload;
 import com.example.greybox.meshmessage.MeshMessage;
 import com.example.greybox.meshmessage.MeshMessageType;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
@@ -32,6 +36,7 @@ public class MClientService extends NetService {
 
 //    private MClientWfdModule mWfdModule; // NOTE: see the comment on wfdNetManagerService
     private MClientNetSockModule mNetSock;
+    private Context context;
 
 
     // --------------------------------------------------------------------------------------------
@@ -39,6 +44,7 @@ public class MClientService extends NetService {
     // --------------------------------------------------------------------------------------------
     public MClientService(Context context, WfdNetManagerService wfd, Handler handler) {
         super(context, wfd, handler);
+        this.context = context;
     }
 
     // --------------------------------------------------------------------------------------------
@@ -63,8 +69,14 @@ public class MClientService extends NetService {
 
     @Override
     public void sendMessage(MeshMessage msg) {
-        mNetSock.write(msg);
+        if (msg.getMsgType() == MeshMessageType.FILE_TRANSFER) {
+            sendFile(msg);
+        } else {
+            mNetSock.write(msg);
+        }
     }
+    @Override
+    public void sendFile(MeshMessage fileMessage) {   mNetSock.writeFile(fileMessage);  }
 
     @Override
     public void handleThreadMessage(Message msg) {
@@ -95,6 +107,40 @@ public class MClientService extends NetService {
                             getMessageTextUiCallback().updateMessageTextUiCallback((String) meshMsg.getData());
                         }
                         break;
+                    case FILE_TRANSFER:
+                        Log.d(TAG, "FILE_TRANSFER received");
+                        Log.d(TAG, "Destination Devices: \n" + meshMsg.getDstDevices());
+
+                        UUID localDeviceId = getDevice().getDeviceId();
+                        Log.d(TAG, "Local Device ID: " + localDeviceId);
+
+                        FilePayload filePayload = (FilePayload) meshMsg.getData();
+                        if (filePayload == null) {
+                            Log.e(TAG, "FilePayload is null in FILE_TRANSFER message");
+                            break;
+                        }
+
+                        byte[] fileData = filePayload.getFileData();
+                        String fileName = filePayload.getFileName();
+                        Log.d(TAG, "File Name: " + fileName + ", Size: " + fileData.length + " bytes");
+
+                        // Parcourir la liste des destinataires et traiter le fichier si l'ID local correspond
+                        for (UUID fileRecipientId : meshMsg.getDstDevices()) {
+                            if (fileRecipientId.equals(localDeviceId)) {
+                                if (getFileReceivedUiCallback() != null) {
+                                    getFileReceivedUiCallback().updateFileReceivedUi(fileData, fileName);
+                                    Log.e(TAG, "File récu");
+                                    break; // Fichier traité, sortir de la boucle
+                                } else {
+                                    Log.e(TAG, "FileReceivedUiCallback is not set");
+                                }
+                            }
+                        }
+                        break;
+
+
+
+
                     case CLIENT_LIST:
                         Log.d(TAG, "CLIENT_LIST");
                         // NOTE: this case is used mostly by the Client devices. Routers update
@@ -125,6 +171,8 @@ public class MClientService extends NetService {
     public interface ConnectionInfoReceivedListener {
         void onConnectionInfoReceived(String deviceAddress, int port);
     }
+
+
 
     private ConnectionInfoReceivedListener connectionInfoReceivedListener;
 

@@ -119,6 +119,13 @@ public class MRouterNetSockModule implements Runnable {
         }
     }
 
+    public void writeFile(MeshMessage msg) {
+        for (ObjectSocketCommunication s : clientSockets) {
+            Log.d(TAG, "Writing to: " + s.getObjectOutputStream());
+            s.writeFile(msg);
+        }
+    }
+
     public ServerSocket getServerSocket() { return serverSocket; }
 
     public void closeServerSocket() {
